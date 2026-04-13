@@ -1,97 +1,119 @@
 'use client';
 
-import Image from "next/image";
-import { useApi } from "@/lib/hooks/useApi";
-import { NotificationDemo } from "@/lib/components/NotificationDemo";
+import React, { useState } from "react";
+import { Input, Button } from "@/lib/components/ui";
+import { ArrowRightOutlined } from "@ant-design/icons";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import api from "@/lib/api";
+import { message } from "antd";
 
-export default function Home() {
-  // Example: fetch from your API endpoint
-  // Change the endpoint to match your FastAPI routes
-  const { data, loading, error } = useApi('/');
+const MotionDiv = motion.div as any;
+
+export default function LoginPage() {
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const router = useRouter();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const response = await api.post('/login', { email, password });
+
+      if (response.data.access_token) {
+        // Save token
+        localStorage.setItem('token', response.data.access_token);
+        // Update axios defaults
+        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`;
+
+        message.success("Atmospheric Link Established. Welcome.");
+        router.push("/dashboard");
+      } else {
+        message.error(response.data.message || "Invalid credentials. Core access denied.");
+      }
+    } catch (error: any) {
+      console.error("Login Error:", error);
+      message.error("Nexus connection failed. Please check your signal.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="flex flex-col flex-1 bg-zinc-50 font-sans dark:bg-black">
-      <main className="w-full flex-1 py-8 px-4 md:px-16 bg-white dark:bg-black">
-        <div className="w-full max-w-4xl mx-auto space-y-8">
-          {/* Header Section */}
-          <div className="flex flex-col items-center gap-6 text-center">
-            <Image
-              className="dark:invert"
-              src="/next.svg"
-              alt="Next.js logo"
-              width={100}
-              height={20}
-              priority
-            />
-            <h1 className="text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-              ERP Santinos
-            </h1>
-          </div>
+    <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-6 relative overflow-hidden">
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-indigo-50 rounded-full blur-[100px] -z-10 opacity-60" />
+      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-sky-50 rounded-full blur-[100px] -z-10 opacity-60" />
 
-          {/* API Status Section */}
-          <div className="w-full p-4 rounded-lg border border-zinc-200 dark:border-zinc-800">
-            {loading && (
-              <div className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
-                <div className="w-4 h-4 border-2 border-zinc-400 border-t-zinc-600 rounded-full animate-spin" />
-                Connecting to API...
-              </div>
-            )}
-            
-            {error && (
-              <div className="text-red-600 dark:text-red-400">
-                <p className="font-semibold">Error connecting to API</p>
-                <p className="text-sm">{error.message}</p>
-              </div>
-            )}
-            
-            {data && !loading && (
-              <div className="text-green-600 dark:text-green-400">
-                <p className="font-semibold">API Connected Successfully!</p>
-                <pre className="text-xs mt-2 bg-zinc-100 dark:bg-zinc-900 p-2 rounded overflow-auto max-h-48">
-                  {JSON.stringify(data, null, 2)}
-                </pre>
-              </div>
-            )}
+      <MotionDiv
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-[400px] z-10"
+      >
+        <div className="text-center mb-10">
+          <div className="w-12 h-12 rounded-xl bg-zinc-900 flex items-center justify-center text-white text-xl font-black mx-auto mb-6 shadow-xl shadow-zinc-900/10">
+            E
           </div>
-
-          {/* Notification Demo Section */}
-          <div className="border-t border-zinc-200 dark:border-zinc-800 pt-8">
-            <NotificationDemo />
-          </div>
-
-          {/* Info Text */}
-          <p className="text-center text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Your FastAPI endpoint is integrated and ready to use. The custom hook <code className="bg-zinc-200 dark:bg-zinc-800 px-2 py-1 rounded">useApi</code> handles data fetching, and real-time notifications are powered by Socket.IO.
-          </p>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col gap-4 text-base font-medium sm:flex-row justify-center">
-            <a
-              className="flex h-12 items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Image
-                className="dark:invert"
-                src="/vercel.svg"
-                alt="GitHub logomark"
-                width={16}
-                height={16}
-              />
-              Repository
-            </a>
-            <a
-              className="flex h-12 items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a]"
-              href="https://nextjs.org/docs"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Documentation
-            </a>
-          </div>
+          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">Sign in to EduCore</h1>
+          <p className="text-zinc-500 mt-2 font-medium text-sm">Nexus is online. Authentication required.</p>
         </div>
-      </main>
+
+        <div className="bg-white border border-zinc-200/60 rounded-2xl p-8 shadow-[0_1px_2px_rgba(0,0,0,0.02),0_8px_24px_rgba(0,0,0,0.04)]">
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[11px] font-bold text-zinc-400 ml-1 uppercase tracking-widest">Email Address</label>
+              <Input
+                type="email"
+                placeholder="name@school.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-11 rounded-xl border-zinc-200 bg-white hover:border-zinc-400 focus:border-zinc-900 focus:ring-0 transition-all font-medium text-sm"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center ml-1">
+                <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">Password</label>
+                <button type="button" className="text-[10px] font-bold text-zinc-400 hover:text-zinc-900 transition-colors uppercase tracking-widest">Forgot?</button>
+              </div>
+              <Input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-11 rounded-xl border-zinc-200 bg-white hover:border-zinc-400 focus:border-zinc-900 focus:ring-0 transition-all font-medium text-sm"
+                required
+              />
+            </div>
+
+            <Button
+              htmlType="submit"
+              className="w-full h-11 rounded-xl bg-zinc-900 text-white font-bold text-sm hover:bg-zinc-800 transition-all shadow-md flex items-center justify-center gap-2"
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  <span>Continue to Dashboard</span>
+                  <ArrowRightOutlined className="text-xs opacity-50" />
+                </>
+              )}
+            </Button>
+          </form>
+        </div>
+
+        <div className="mt-10 text-center">
+          <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.3em] leading-relaxed">
+            Secure Enterprise Access <br />
+            Verified via FastAPI Core
+          </p>
+        </div>
+      </MotionDiv>
     </div>
   );
 }
