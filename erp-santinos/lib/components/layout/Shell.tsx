@@ -96,11 +96,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
             >
                 <div className="p-8 pb-10 flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-white text-xl font-black shadow-sm font-sans">
-                        E
+                        B
                     </div>
                     {!collapsed && (
                         <div className="flex flex-col">
-                            <span className="text-sm font-black text-primary uppercase tracking-tight leading-none font-sans">EduCore</span>
+                            <span className="text-sm font-black text-primary uppercase tracking-tight leading-none font-sans">BodhiEdu</span>
                             <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mt-1 font-sans">SaaS ERP</span>
                         </div>
                     )}

@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ERP-Santinos",
-  description: "ERP-Santinos",
+  title: "BodhiEdu",
+  description: "BodhiEdu - Modern School Management System",
 };
 
 export default function RootLayout({

@@ -55,9 +55,9 @@ export default function LoginPage() {
       >
         <div className="text-center mb-10">
           <div className="w-12 h-12 rounded-xl bg-zinc-900 flex items-center justify-center text-white text-xl font-black mx-auto mb-6 shadow-xl shadow-zinc-900/10">
-            E
+            B
           </div>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">Sign in to EduCore</h1>
+          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">Sign in to BodhiEdu</h1>
           <p className="text-zinc-500 mt-2 font-medium text-sm">Nexus is online. Authentication required.</p>
         </div>
 

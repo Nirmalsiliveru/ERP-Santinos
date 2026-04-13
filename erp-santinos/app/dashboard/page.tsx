@@ -77,7 +77,7 @@ export default function Dashboard() {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-100 pb-10">
                     <div>
                         <h1 className="text-4xl font-black text-zinc-900 tracking-tighter">Institutional Nexus</h1>
-                        <p className="text-zinc-500 text-sm font-medium mt-1">Global oversight of EduCore operational metrics.</p>
+                        <p className="text-zinc-500 text-sm font-medium mt-1">Global oversight of BodhiEdu operational metrics.</p>
                     </div>
                     <div className="bg-zinc-100/50 p-1 rounded-xl flex items-center gap-1 border border-zinc-200">
                         <div className="px-4 py-1.5 bg-white shadow-sm rounded-lg text-[10px] font-black text-zinc-900 uppercase">Real Time</div>
