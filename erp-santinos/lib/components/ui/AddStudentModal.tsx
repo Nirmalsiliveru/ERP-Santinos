@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React from "react";
-import { Modal, Form, Input, DatePicker, Select, Button, message } from "antd";
+import { Modal, Form, Input, DatePicker, Select, message } from "antd";
+import { Button } from "@/lib/components/ui";
 import api from "@/lib/api";
 
 interface StudentFormProps {
@@ -14,7 +14,39 @@ interface StudentFormProps {
 export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps) {
     const [form] = Form.useForm();
     const [loading, setLoading] = React.useState(false);
+    const [loadingAcademics, setLoadingAcademics] = React.useState(false);
+    const [classes, setClasses] = React.useState<any[]>([]);
+    const [sections, setSections] = React.useState<any[]>([]);
+    const [filteredSections, setFilteredSections] = React.useState<any[]>([]);
     const [messageApi, contextHolder] = message.useMessage();
+
+    React.useEffect(() => {
+        if (open) {
+            fetchAcademics();
+        }
+    }, [open]);
+
+    const fetchAcademics = async () => {
+        setLoadingAcademics(true);
+        try {
+            const [classRes, sectionRes] = await Promise.all([
+                api.get('/classes?size=100'),
+                api.get('/sections')
+            ]);
+            setClasses(classRes.data.items || []);
+            setSections(sectionRes.data);
+        } catch (error: any) {
+            console.error("Fetch Academics Error:", error);
+        } finally {
+            setLoadingAcademics(false);
+        }
+    };
+
+    const handleClassChange = (classId: number) => {
+        const filtered = sections.filter(s => s.class_id === classId);
+        setFilteredSections(filtered);
+        form.setFieldValue('section_id', undefined);
+    };
 
     const onFinish = async (values: any) => {
         setLoading(true);
@@ -94,6 +126,34 @@ export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps)
                     </Form.Item>
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                    <Form.Item
+                        name="class_id"
+                        label={<span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Assign Class</span>}
+                        rules={[{ required: true, message: 'Required' }]}
+                    >
+                        <Select
+                            className="custom-select w-full"
+                            placeholder="Select Grade"
+                            loading={loadingAcademics}
+                            onChange={handleClassChange}
+                            options={classes.map(c => ({ value: c.id, label: c.name }))}
+                        />
+                    </Form.Item>
+                    <Form.Item
+                        name="section_id"
+                        label={<span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Assign Section</span>}
+                        rules={[{ required: true, message: 'Required' }]}
+                    >
+                        <Select
+                            className="custom-select w-full"
+                            placeholder="Select Subdivision"
+                            options={filteredSections.map(s => ({ value: s.id, label: `Section ${s.name}` }))}
+                            disabled={!form.getFieldValue('class_id')}
+                        />
+                    </Form.Item>
+                </div>
+
                 <div className="grid grid-cols-3 gap-4">
                     <Form.Item
                         name="gender"
@@ -116,12 +176,11 @@ export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps)
                 </div>
 
                 <div className="pt-6 border-t border-zinc-100 flex justify-end gap-3">
-                    <Button onClick={onCancel} className="h-11 px-8 rounded-xl font-bold text-zinc-500 hover:text-zinc-900 border-none bg-zinc-50">Cancel</Button>
+                    <Button variant="ghost" onClick={onCancel}>Cancel</Button>
                     <Button
-                        type="primary"
+                        variant="default"
                         htmlType="submit"
                         loading={loading}
-                        className="btn-primary h-11 px-10 rounded-xl"
                     >
                         Finalize Enrollment
                     </Button>

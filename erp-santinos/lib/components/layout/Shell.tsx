@@ -16,7 +16,8 @@ import {
     SettingOutlined,
     BellOutlined,
     SearchOutlined,
-    LogoutOutlined
+    LogoutOutlined,
+    SafetyCertificateOutlined
 } from "@ant-design/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -78,6 +79,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         { key: "/exams", icon: <FileProtectOutlined />, label: <Link href="/exams" className="text-[13px]">Exams</Link> },
         { key: "/fees", icon: <DollarOutlined />, label: <Link href="/fees" className="text-[13px]">Fees</Link> },
         { key: "/reports", icon: <BarChartOutlined />, label: <Link href="/reports" className="text-[13px]">Reports</Link> },
+        { key: "/users", icon: <SafetyCertificateOutlined />, label: <Link href="/users" className="text-[13px]">User Management</Link> },
         { key: "/settings", icon: <SettingOutlined />, label: <Link href="/settings" className="text-[13px]">Settings</Link> },
     ];
 
@@ -156,7 +158,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                             <ThemeToggle />
                             <button className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 transition-all relative">
                                 <BellOutlined />
-                                <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-indigo-500 rounded-full border-2 border-white" />
+                                <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-primary rounded-full border-2 border-white" />
                             </button>
 
                             <div className="h-4 w-[1px] bg-zinc-200 mx-1" />

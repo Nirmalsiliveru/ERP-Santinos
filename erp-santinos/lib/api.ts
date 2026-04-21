@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://fastapi-learning-fct4.onrender.com';
+// const API_BASE_URL = 'https://fastapi-learning-fct4.onrender.com';
+const API_BASE_URL = 'http://localhost:8000';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

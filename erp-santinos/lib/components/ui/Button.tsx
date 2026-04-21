@@ -13,23 +13,23 @@ function cn(...inputs: ClassValue[]) {
 }
 
 const buttonVariants = cva(
-    "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background",
+    "inline-flex items-center justify-center rounded-xl text-[11px] font-black uppercase tracking-widest transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98] border-none cursor-pointer",
     {
         variants: {
             variant: {
-                default: "bg-primary text-primary-foreground hover:bg-primary/90",
+                default: "bg-primary text-white shadow-md hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/20",
                 destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-                outline: "border border-input hover:bg-accent hover:text-accent-foreground",
-                secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-                ghost: "hover:bg-accent hover:text-accent-foreground",
+                outline: "border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-600",
+                secondary: "bg-zinc-100 text-zinc-600 hover:bg-zinc-200",
+                ghost: "hover:bg-zinc-100 text-zinc-600",
                 link: "underline-offset-4 hover:underline text-primary",
-                premium: "bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-none shadow-lg hover:shadow-indigo-500/25",
+                premium: "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg hover:shadow-indigo-500/25",
             },
             size: {
-                default: "h-10 py-2 px-4",
-                sm: "h-9 px-3 rounded-md",
-                lg: "h-11 px-8 rounded-md",
-                icon: "h-10 w-10",
+                default: "h-11 px-8",
+                sm: "h-9 px-4",
+                lg: "h-12 px-10",
+                icon: "h-11 w-11",
             },
         },
         defaultVariants: {
@@ -46,22 +46,24 @@ export interface ButtonProps
     animate?: boolean;
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-    ({ className, variant, size, animate = true, ...props }, ref) => {
-        const Comp = animate ? motion.button : "button";
+import { LoadingOutlined } from "@ant-design/icons";
 
-        // We wrap Ant Design button or just use its logic if we want, 
-        // but for "premium" feel, we might want custom styled buttons.
-        // However, antd provides a lot of logic. 
-        // Let's create a custom styled button that can optionally use antd features.
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+    ({ className, variant, size, animate = true, loading, children, ...props }, ref) => {
+        const Comp = (animate ? motion.button : "button") as any;
 
         return (
             <Comp
-                whileHover={animate ? { scale: 1.02 } : undefined}
-                whileTap={animate ? { scale: 0.98 } : undefined}
+                ref={ref}
+                whileHover={animate && !loading ? { scale: 1.02 } : undefined}
+                whileTap={animate && !loading ? { scale: 0.98 } : undefined}
                 className={cn(buttonVariants({ variant, size, className }))}
+                disabled={loading || props.disabled}
                 {...(props as any)}
-            />
+            >
+                {loading && <LoadingOutlined className="mr-2" />}
+                {children}
+            </Comp>
         );
     }
 );

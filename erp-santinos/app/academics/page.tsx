@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { Shell } from "@/lib/components/layout";
-import { Button, Table, message, Tag } from "antd";
+import { Table, message, Tag } from "antd";
+import { Button, AddClassModal, AddSectionModal } from "@/lib/components/ui";
 import {
     PlusOutlined,
     BlockOutlined,
@@ -15,20 +16,44 @@ export default function AcademicsPage() {
     const [loading, setLoading] = useState(true);
     const [classes, setClasses] = useState([]);
     const [sections, setSections] = useState([]);
+    const [isClassModalOpen, setIsClassModalOpen] = useState(false);
+    const [isSectionModalOpen, setIsSectionModalOpen] = useState(false);
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(5);
+    const [total, setTotal] = useState(0);
     const [messageApi, contextHolder] = message.useMessage();
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const [classRes, sectionRes] = await Promise.all([
+                    api.get(`/classes?page=${page}&size=${pageSize}`),
+                    api.get('/sections')
+                ]);
+                setClasses(classRes.data.items);
+                setTotal(classRes.data.total);
+                setSections(sectionRes.data);
+            } catch (error: any) {
+                console.error("Fetch Academics Error:", error);
+                messageApi.error("Failed to synchronize academic structure.");
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const fetchData = async () => {
+        fetchData();
+    }, [messageApi, page, pageSize]);
+
+    const fetchDataManual = async () => {
         setLoading(true);
         try {
             const [classRes, sectionRes] = await Promise.all([
-                api.get('/classes'),
+                api.get(`/classes?page=${page}&size=${pageSize}`),
                 api.get('/sections')
             ]);
-            setClasses(classRes.data);
+            setClasses(classRes.data.items);
+            setTotal(classRes.data.total);
             setSections(sectionRes.data);
         } catch (error: any) {
             console.error("Fetch Academics Error:", error);
@@ -83,10 +108,10 @@ export default function AcademicsPage() {
                         <p className="text-zinc-500 text-sm font-medium mt-1">Configure institutional hierarchies, grades, and subdivisions.</p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Button className="btn-secondary flex items-center gap-2">
+                        <Button variant="secondary" className="flex items-center gap-2" onClick={() => setIsSectionModalOpen(true)}>
                             <BranchesOutlined /> Manage Sections
                         </Button>
-                        <Button className="btn-primary flex items-center gap-2">
+                        <Button variant="default" className="flex items-center gap-2" onClick={() => setIsClassModalOpen(true)}>
                             <PlusOutlined /> Define New Class
                         </Button>
                     </div>
@@ -129,7 +154,16 @@ export default function AcademicsPage() {
                                 <Table
                                     dataSource={classes}
                                     columns={classColumns}
-                                    pagination={false}
+                                    pagination={{
+                                        current: page,
+                                        pageSize: pageSize,
+                                        total: total,
+                                        onChange: (p, s) => {
+                                            setPage(p);
+                                            setPageSize(s);
+                                        },
+                                        className: "custom-pagination px-4 pb-4"
+                                    }}
                                     className="border-none"
                                     rowClassName="hover:bg-zinc-50/50 transition-all h-20"
                                     rowKey="id"
@@ -139,6 +173,23 @@ export default function AcademicsPage() {
                     </div>
                 </div>
             </div>
+
+            <AddClassModal
+                open={isClassModalOpen}
+                onCancel={() => setIsClassModalOpen(false)}
+                onSuccess={() => {
+                    setIsClassModalOpen(false);
+                    fetchDataManual();
+                }}
+            />
+            <AddSectionModal
+                open={isSectionModalOpen}
+                onCancel={() => setIsSectionModalOpen(false)}
+                onSuccess={() => {
+                    setIsSectionModalOpen(false);
+                    fetchDataManual();
+                }}
+            />
         </Shell>
     );
 }

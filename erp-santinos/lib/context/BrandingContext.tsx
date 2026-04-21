@@ -19,8 +19,8 @@ interface BrandingContextType {
 }
 
 const defaultColors: BrandingColors = {
-    primary: "#2563eb",
-    primaryHover: "#1d4ed8",
+    primary: "#5d4037",
+    primaryHover: "#3e2723",
     secondary: "#f1f5f9",
     accent: "#7c3aed",
     background: "#f8fafc",
