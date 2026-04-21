@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { notificationService } from '../services/notification.service';
 
@@ -16,14 +16,15 @@ export interface SocketNotificationPayload {
 let socketInstance: Socket | null = null;
 
 export function useSocket() {
-  const socketRef = useRef<Socket | null>(null);
+  // Use state to track the socket so it's safe for rendering and triggers updates
+  const [socket, setSocket] = useState<Socket | null>(socketInstance);
 
   useEffect(() => {
     // Only connect on client side
     if (typeof window === 'undefined') return;
 
-    if (!socketRef.current) {
-      socketRef.current = io(SOCKET_URL, {
+    if (!socketInstance) {
+      socketInstance = io(SOCKET_URL, {
         reconnection: true,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
@@ -32,7 +33,7 @@ export function useSocket() {
       });
 
       // Listen for notifications
-      socketRef.current.on('notification', (payload: SocketNotificationPayload) => {
+      socketInstance.on('notification', (payload: SocketNotificationPayload) => {
         notificationService.open({
           type: payload.type,
           message: payload.message,
@@ -41,33 +42,23 @@ export function useSocket() {
       });
 
       // Connection events
-      socketRef.current.on('connect', () => {
-        console.log('Socket connected:', socketRef.current?.id);
+      socketInstance.on('connect', () => {
+        console.log('Socket connected:', socketInstance?.id);
+        setSocket(socketInstance);
       });
 
-      socketRef.current.on('disconnect', () => {
+      socketInstance.on('disconnect', () => {
         console.log('Socket disconnected');
+        setSocket(socketInstance);
       });
 
-      socketRef.current.on('connect_error', (error) => {
+      socketInstance.on('connect_error', (error) => {
         console.error('Socket connection error:', error);
       });
-
-      socketInstance = socketRef.current;
     }
-
-    return () => {
-      // Cleanup on unmount
-      if (socketRef.current) {
-        socketRef.current.off('notification');
-        socketRef.current.off('connect');
-        socketRef.current.off('disconnect');
-        socketRef.current.off('connect_error');
-      }
-    };
   }, []);
 
-  return socketRef.current;
+  return socket;
 }
 
 export function getSocket(): Socket | null {

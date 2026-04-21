@@ -18,6 +18,7 @@ export default function StudentsPage() {
     const [loading, setLoading] = useState(true);
     const [students, setStudents] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [messageApi, contextHolder] = message.useMessage();
 
     useEffect(() => {
         fetchStudents();
@@ -30,7 +31,7 @@ export default function StudentsPage() {
             setStudents(response.data);
         } catch (error: any) {
             console.error("Fetch Students Error:", error);
-            message.error("Unable to synchronize with the Student Registry.");
+            messageApi.error("Unable to synchronize with the Student Registry.");
         } finally {
             setLoading(false);
         }
@@ -90,6 +91,7 @@ export default function StudentsPage() {
 
     return (
         <Shell>
+            {contextHolder}
             <div className="space-y-8">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>

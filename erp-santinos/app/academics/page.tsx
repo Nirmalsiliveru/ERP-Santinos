@@ -15,6 +15,7 @@ export default function AcademicsPage() {
     const [loading, setLoading] = useState(true);
     const [classes, setClasses] = useState([]);
     const [sections, setSections] = useState([]);
+    const [messageApi, contextHolder] = message.useMessage();
 
     useEffect(() => {
         fetchData();
@@ -31,7 +32,7 @@ export default function AcademicsPage() {
             setSections(sectionRes.data);
         } catch (error: any) {
             console.error("Fetch Academics Error:", error);
-            message.error("Failed to synchronize academic structure.");
+            messageApi.error("Failed to synchronize academic structure.");
         } finally {
             setLoading(false);
         }
@@ -74,6 +75,7 @@ export default function AcademicsPage() {
 
     return (
         <Shell>
+            {contextHolder}
             <div className="space-y-12">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-zinc-100 pb-10">
                     <div>

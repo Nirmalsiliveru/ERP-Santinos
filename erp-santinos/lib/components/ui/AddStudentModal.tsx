@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React from "react";
@@ -13,6 +14,7 @@ interface StudentFormProps {
 export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps) {
     const [form] = Form.useForm();
     const [loading, setLoading] = React.useState(false);
+    const [messageApi, contextHolder] = message.useMessage();
 
     const onFinish = async (values: any) => {
         setLoading(true);
@@ -25,12 +27,12 @@ export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps)
             };
 
             await api.post('/student', payload);
-            message.success("New student unit initialized in the registry.");
+            messageApi.success("New student unit initialized in the registry.");
             form.resetFields();
             onSuccess();
         } catch (error: any) {
             console.error("Add Student Error:", error);
-            message.error(error.response?.data?.detail || "Registry write failed.");
+            messageApi.error(error.response?.data?.detail || "Registry write failed.");
         } finally {
             setLoading(false);
         }
@@ -43,6 +45,7 @@ export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps)
             footer={null}
             title={
                 <div className="mb-6">
+                    {contextHolder}
                     <h2 className="text-xl font-black text-zinc-900 tracking-tight">Enroll New Student</h2>
                     <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Data Entry Module</p>
                 </div>

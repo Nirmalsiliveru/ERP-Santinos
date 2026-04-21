@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState } from "react";
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
+  const [messageApi, contextHolder] = message.useMessage();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,14 +31,14 @@ export default function LoginPage() {
         // Update axios defaults
         api.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`;
 
-        message.success("Atmospheric Link Established. Welcome.");
+        messageApi.success("Atmospheric Link Established. Welcome.");
         router.push("/dashboard");
       } else {
-        message.error(response.data.message || "Invalid credentials. Core access denied.");
+        messageApi.error(response.data.message || "Invalid credentials. Core access denied.");
       }
     } catch (error: any) {
       console.error("Login Error:", error);
-      message.error("Nexus connection failed. Please check your signal.");
+      messageApi.error("Nexus connection failed. Please check your signal.");
     } finally {
       setLoading(false);
     }
@@ -44,6 +46,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-6 relative overflow-hidden">
+      {contextHolder}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-indigo-50 rounded-full blur-[100px] -z-10 opacity-60" />
       <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-sky-50 rounded-full blur-[100px] -z-10 opacity-60" />
 

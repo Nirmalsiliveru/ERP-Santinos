@@ -37,7 +37,20 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
         const saved = localStorage.getItem("school-branding");
         if (saved) {
             try {
-                setColorsState(JSON.parse(saved));
+                const parsed = JSON.parse(saved);
+
+                // Use requestAnimationFrame to move the state update out of the synchronous 
+                // effect body, avoiding cascading render warnings and allowing the first 
+                // paint to complete.
+                requestAnimationFrame(() => {
+                    setColorsState(parsed);
+
+                    // Sync CSS Variables on initial load
+                    const root = document.documentElement;
+                    Object.entries(parsed as BrandingColors).forEach(([key, value]) => {
+                        root.style.setProperty(`--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`, value);
+                    });
+                });
             } catch (e) {
                 console.error("Failed to parse saved branding", e);
             }
