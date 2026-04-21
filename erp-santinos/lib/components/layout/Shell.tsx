@@ -23,6 +23,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ThemeToggle } from "../theme/ThemeToggle";
+import { useUser } from "@/lib/context/UserContext";
+import { GlobalOutlined } from "@ant-design/icons";
 
 const { Header, Sider, Content } = Layout;
 
@@ -31,6 +33,7 @@ const MotionDiv = motion.div as any;
 export function Shell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
+    const { user, loading: userLoading } = useUser();
     const [collapsed, setCollapsed] = useState(false);
     const [hasMounted, setHasMounted] = React.useState(false);
 
@@ -70,7 +73,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         },
     ];
 
-    const menuItems: MenuProps['items'] = [
+    const baseMenuItems: MenuProps['items'] = [
         { key: "/dashboard", icon: <DashboardOutlined />, label: <Link href="/dashboard" className="text-[13px]">Dashboard</Link> },
         { key: "/students", icon: <UserOutlined />, label: <Link href="/students" className="text-[13px]">Students</Link> },
         { key: "/teachers", icon: <TeamOutlined />, label: <Link href="/teachers" className="text-[13px]">Teachers</Link> },
@@ -83,6 +86,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
         { key: "/rbac", icon: <FileProtectOutlined />, label: <Link href="/rbac" className="text-[13px]">Roles & Permissions</Link> },
         { key: "/settings", icon: <SettingOutlined />, label: <Link href="/settings" className="text-[13px]">Settings</Link> },
     ];
+
+    const menuItems: MenuProps['items'] = user?.is_platform_admin
+        ? [
+            { key: "/platform", icon: <GlobalOutlined />, label: <Link href="/platform" className="text-[13px] font-bold text-primary">School Management</Link> } as any,
+            { type: 'divider' } as any,
+            ...baseMenuItems
+        ]
+        : baseMenuItems;
 
     if (!hasMounted) return <div className="min-h-screen bg-white" />;
 
@@ -99,12 +110,16 @@ export function Shell({ children }: { children: React.ReactNode }) {
             >
                 <div className="p-8 pb-10 flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-white text-xl font-black shadow-sm font-sans">
-                        B
+                        {user?.is_platform_admin ? 'P' : 'B'}
                     </div>
                     {!collapsed && (
                         <div className="flex flex-col">
-                            <span className="text-sm font-black text-primary uppercase tracking-tight leading-none font-sans">BodhiEdu</span>
-                            <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mt-1 font-sans">SaaS ERP</span>
+                            <span className="text-sm font-black text-primary uppercase tracking-tight leading-none font-sans">
+                                {user?.is_platform_admin ? 'Platform Admin' : 'BodhiEdu'}
+                            </span>
+                            <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mt-1 font-sans">
+                                {user?.is_platform_admin ? 'Multi-tenant Control' : 'SaaS ERP'}
+                            </span>
                         </div>
                     )}
                 </div>
@@ -119,7 +134,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
                     />
                 </div>
 
-                {!collapsed && (
+                {/* Support Card - Hide for Platform Admin as they are the support */}
+                {!collapsed && !user?.is_platform_admin && (
                     <div className="mx-6 mt-12 p-5 rounded-2xl bg-zinc-50 border border-zinc-100 relative group transition-all">
                         <p className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em] leading-none">Support</p>
                         <p className="text-[11px] font-medium text-zinc-500 mt-2 leading-relaxed">Need help with the platform?</p>
@@ -139,18 +155,18 @@ export function Shell({ children }: { children: React.ReactNode }) {
                         </button>
 
                         <div className="hidden lg:flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-sans">
-                            <span>Admin</span>
+                            <span>{user?.is_platform_admin ? 'PLATFORM OWNER' : 'ADMIN'}</span>
                             <span className="text-zinc-200">/</span>
                             <span className="text-zinc-900">{pathname?.split('/')[1]?.toUpperCase() || 'OVERVIEW'}</span>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-5">
-                        <div className="hidden sm:flex items-center relative group">
+                        <div className="hidden sm:flex items-center relative group" title="Search all schools (Platform Admin restriction)">
                             <SearchOutlined className="absolute left-3 text-zinc-300 text-[12px] group-focus-within:text-zinc-900 transition-colors" />
                             <input
                                 type="text"
-                                placeholder="Search..."
+                                placeholder={user?.is_platform_admin ? "Search Schools..." : "Search..."}
                                 className="bg-zinc-50 border border-zinc-100 rounded-lg pl-9 pr-3 h-8 w-40 text-xs font-medium text-zinc-900 focus:outline-none focus:border-zinc-300 focus:w-56 transition-all"
                             />
                         </div>
@@ -166,9 +182,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
                             <Dropdown menu={{ items: userMenu }} trigger={['click']} placement="bottomRight">
                                 <button className="flex items-center gap-2 pl-2 group outline-none">
-                                    <span className="text-xs font-bold text-zinc-900 hidden md:block font-sans">Nexus Admin</span>
+                                    <span className="text-xs font-bold text-zinc-900 hidden md:block font-sans">
+                                        {user?.email?.split('@')[0] || 'Admin'}
+                                    </span>
                                     <div className="w-8 h-8 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-[10px] font-black text-zinc-900 group-hover:bg-zinc-200 transition-all font-sans relative">
-                                        NA
+                                        {user?.email?.substring(0, 2).toUpperCase() || 'AD'}
                                         <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white" />
                                     </div>
                                 </button>

@@ -32,7 +32,12 @@ export default function LoginPage() {
         api.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`;
 
         messageApi.success("Atmospheric Link Established. Welcome.");
-        router.push("/dashboard");
+
+        if (response.data.is_platform_admin) {
+          router.push("/platform");
+        } else {
+          router.push("/dashboard");
+        }
       } else {
         messageApi.error(response.data.message || "Invalid credentials. Core access denied.");
       }
