@@ -46,21 +46,24 @@ export default function Dashboard() {
     const [stats, setStats] = useState({
         students: 0,
         classes: 0,
-        sections: 0
+        sections: 0,
+        teachers: 0
     });
 
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const [s, c, sec] = await Promise.all([
+                const [s, c, sec, t] = await Promise.all([
                     api.get('/students'),
-                    api.get('/classes'),
-                    api.get('/sections')
+                    api.get('/classes?size=1'), // Just get total
+                    api.get('/sections'),
+                    api.get('/teachers?size=1')
                 ]);
                 setStats({
-                    students: s.data.length,
-                    classes: c.data.length,
-                    sections: sec.data.length
+                    students: s.data.length || 0,
+                    classes: c.data.total || 0,
+                    sections: sec.data.length || 0,
+                    teachers: t.data.total || 0
                 });
             } catch (error) {
                 console.error("Dashboard Stats Error:", error);
@@ -112,9 +115,9 @@ export default function Dashboard() {
                         />
                         <StatCard
                             title="Faculty Load"
-                            value="42"
+                            value={stats.teachers.toString()}
                             icon={<CalendarOutlined className="text-emerald-500" />}
-                            trend={{ value: 2, isUp: false }}
+                            trend={{ value: 2, isUp: true }}
                         />
                     </div>
                 )}

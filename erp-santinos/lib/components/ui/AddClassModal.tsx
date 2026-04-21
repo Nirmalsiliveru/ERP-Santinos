@@ -9,23 +9,39 @@ interface ClassFormProps {
     open: boolean;
     onCancel: () => void;
     onSuccess: () => void;
+    initialData?: any;
 }
 
-export function AddClassModal({ open, onCancel, onSuccess }: ClassFormProps) {
+export function AddClassModal({ open, onCancel, onSuccess, initialData }: ClassFormProps) {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [messageApi, contextHolder] = message.useMessage();
 
+    React.useEffect(() => {
+        if (open) {
+            if (initialData) {
+                form.setFieldsValue(initialData);
+            } else {
+                form.resetFields();
+            }
+        }
+    }, [open, initialData, form]);
+
     const onFinish = async (values: any) => {
         setLoading(true);
         try {
-            await api.post('/classes', values);
-            messageApi.success("Academic unit established in core architecture.");
+            if (initialData?.id) {
+                await api.put(`/classes/${initialData.id}`, values);
+                messageApi.success("Academic unit updated in core architecture.");
+            } else {
+                await api.post('/classes', values);
+                messageApi.success("Academic unit established in core architecture.");
+            }
             form.resetFields();
             onSuccess();
         } catch (error: any) {
-            console.error("Add Class Error:", error);
-            messageApi.error(error.response?.data?.detail || "Structural initialization failed.");
+            console.error("Class Operation Error:", error);
+            messageApi.error(error.response?.data?.detail || "Operation failed.");
         } finally {
             setLoading(false);
         }
@@ -39,8 +55,12 @@ export function AddClassModal({ open, onCancel, onSuccess }: ClassFormProps) {
             title={
                 <div className="mb-6">
                     {contextHolder}
-                    <h2 className="text-xl font-black text-zinc-900 tracking-tight">Define New Class</h2>
-                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Grade Level Specification</p>
+                    <h2 className="text-xl font-black text-zinc-900 tracking-tight">
+                        {initialData ? "Update Grade Level" : "Define New Class"}
+                    </h2>
+                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">
+                        {initialData ? "Modify Specifications" : "Grade Level Specification"}
+                    </p>
                 </div>
             }
             width={450}
@@ -83,7 +103,7 @@ export function AddClassModal({ open, onCancel, onSuccess }: ClassFormProps) {
                         htmlType="submit"
                         loading={loading}
                     >
-                        Initialize Grade
+                        {initialData ? "Update Grade" : "Initialize Grade"}
                     </Button>
                 </div>
             </Form>

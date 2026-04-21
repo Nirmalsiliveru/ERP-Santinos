@@ -9,6 +9,8 @@ export * from "./StatCard";
 export * from "./AddUserModal";
 export * from "./AddClassModal";
 export * from "./AddSectionModal";
+export * from "./AddTeacherModal";
+export * from "./AddRoleModal";
 export * from "./Textarea";
 export * from "./Select";
 export * from "./DatePicker";

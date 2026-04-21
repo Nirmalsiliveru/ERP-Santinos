@@ -80,6 +80,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         { key: "/fees", icon: <DollarOutlined />, label: <Link href="/fees" className="text-[13px]">Fees</Link> },
         { key: "/reports", icon: <BarChartOutlined />, label: <Link href="/reports" className="text-[13px]">Reports</Link> },
         { key: "/users", icon: <SafetyCertificateOutlined />, label: <Link href="/users" className="text-[13px]">User Management</Link> },
+        { key: "/rbac", icon: <FileProtectOutlined />, label: <Link href="/rbac" className="text-[13px]">Roles & Permissions</Link> },
         { key: "/settings", icon: <SettingOutlined />, label: <Link href="/settings" className="text-[13px]">Settings</Link> },
     ];
 

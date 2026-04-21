@@ -8,7 +8,8 @@ import {
     PlusOutlined,
     BlockOutlined,
     BranchesOutlined,
-    LoadingOutlined
+    LoadingOutlined,
+    EditOutlined
 } from "@ant-design/icons";
 import api from "@/lib/api";
 
@@ -18,6 +19,7 @@ export default function AcademicsPage() {
     const [sections, setSections] = useState([]);
     const [isClassModalOpen, setIsClassModalOpen] = useState(false);
     const [isSectionModalOpen, setIsSectionModalOpen] = useState(false);
+    const [selectedClass, setSelectedClass] = useState<any>(null);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(5);
     const [total, setTotal] = useState(0);
@@ -94,6 +96,23 @@ export default function AcademicsPage() {
                 <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${s ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
                     {s ? 'Operational' : 'Inactive'}
                 </span>
+            )
+        },
+        {
+            title: 'ACTION',
+            key: 'action',
+            render: (r: any) => (
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-zinc-400 hover:text-primary hover:bg-primary/5 transition-all"
+                    onClick={() => {
+                        setSelectedClass(r);
+                        setIsClassModalOpen(true);
+                    }}
+                >
+                    <EditOutlined />
+                </Button>
             )
         }
     ];
@@ -179,8 +198,10 @@ export default function AcademicsPage() {
                 onCancel={() => setIsClassModalOpen(false)}
                 onSuccess={() => {
                     setIsClassModalOpen(false);
+                    setSelectedClass(null);
                     fetchDataManual();
                 }}
+                initialData={selectedClass}
             />
             <AddSectionModal
                 open={isSectionModalOpen}
