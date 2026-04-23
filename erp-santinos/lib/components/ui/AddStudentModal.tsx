@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Modal, Form, Input, DatePicker, Select, message, Tabs, Checkbox, Row, Col, Divider, Upload } from "antd";
+import Image from "next/image";
 import { Button } from "@/lib/components/ui";
 import { UploadOutlined, UserOutlined } from "@ant-design/icons";
 import api from "@/lib/api";
@@ -122,7 +123,14 @@ export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps)
                             <div className="flex flex-col items-center gap-4">
                                 <div className="w-32 h-32 rounded-3xl bg-zinc-50 border-2 border-dashed border-zinc-200 flex items-center justify-center overflow-hidden relative group transition-all hover:border-primary/50">
                                     {fileList.length > 0 ? (
-                                        <img src={URL.createObjectURL(fileList[0].originFileObj)} className="w-full h-full object-cover" alt="preview" />
+                                        <Image
+                                            src={URL.createObjectURL(fileList[0].originFileObj)}
+                                            className="w-full h-full object-cover"
+                                            alt="preview"
+                                            width={128}
+                                            height={128}
+                                            unoptimized
+                                        />
                                     ) : (
                                         <div className="flex flex-col items-center gap-2 text-zinc-400">
                                             <UserOutlined className="text-3xl" />

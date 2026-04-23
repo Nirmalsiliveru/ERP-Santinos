@@ -56,7 +56,6 @@ export function NotificationDemo() {
                     'Please review this carefully'
                   )
                 }
-                warning
               >
                 Warning
               </Button>
