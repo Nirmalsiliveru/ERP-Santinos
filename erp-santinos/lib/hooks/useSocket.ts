@@ -25,20 +25,14 @@ export function useSocket() {
 
     if (!socketInstance) {
       socketInstance = io(SOCKET_URL, {
+        path: '/socket.io/',
         reconnection: true,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
-        reconnectionAttempts: 5,
-        transports: ['websocket', 'polling'],
-      });
-
-      // Listen for notifications
-      socketInstance.on('notification', (payload: SocketNotificationPayload) => {
-        notificationService.open({
-          type: payload.type,
-          message: payload.message,
-          description: payload.description,
-        });
+        reconnectionAttempts: 10,
+        transports: ['polling', 'websocket'], // Polling first is more stable on Render/Vercel
+        withCredentials: true,
+        secure: true,
       });
 
       // Connection events
