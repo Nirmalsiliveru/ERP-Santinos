@@ -23,6 +23,7 @@ import {
 } from "@ant-design/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { ThemeToggle } from "../theme/ThemeToggle";
 import { useUser } from "@/lib/context/UserContext";
@@ -292,10 +293,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
                                     </span>
                                     <div className="w-8 h-8 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-[10px] font-black text-zinc-900 group-hover:bg-zinc-200 transition-all font-sans relative overflow-hidden">
                                         {user?.profile_photo ? (
-                                            <img
-                                                src={`http://localhost:8000${user.profile_photo}`}
+                                            <Image
+                                                src={`${process.env.NEXT_PUBLIC_URL || 'http://localhost:8000'}${user.profile_photo}`}
                                                 alt="Profile"
                                                 className="w-full h-full object-cover"
+                                                width={32}
+                                                height={32}
+                                                unoptimized
                                             />
                                         ) : (
                                             user?.full_name ? user.full_name.substring(0, 2).toUpperCase() : (user?.email?.substring(0, 2).toUpperCase() || 'AD')

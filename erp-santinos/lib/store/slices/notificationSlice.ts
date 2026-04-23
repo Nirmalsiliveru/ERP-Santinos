@@ -33,6 +33,10 @@ const notificationSlice = createSlice({
             state.notifications.unshift(newNotification);
             state.unreadCount += 1;
         },
+        hydrateNotifications: (state, action: PayloadAction<Notification[]>) => {
+            state.notifications = action.payload;
+            state.unreadCount = action.payload.filter(n => !n.read).length;
+        },
         markAsRead: (state, action: PayloadAction<number>) => {
             const index = state.notifications.findIndex(n => n.id === action.payload);
             if (index !== -1 && !state.notifications[index].read) {
@@ -51,5 +55,5 @@ const notificationSlice = createSlice({
     },
 });
 
-export const { addNotification, markAsRead, clearAllNotifications, markAllAsRead } = notificationSlice.actions;
+export const { addNotification, hydrateNotifications, markAsRead, clearAllNotifications, markAllAsRead } = notificationSlice.actions;
 export default notificationSlice.reducer;
