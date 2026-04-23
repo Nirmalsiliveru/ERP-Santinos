@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Table, Tag, Space, Card, Typography, message, Modal, Form, Input } from "antd";
-import { PlusOutlined, BankOutlined, UserAddOutlined, GlobalOutlined } from "@ant-design/icons";
+import { PlusOutlined, BankOutlined, UserAddOutlined } from "@ant-design/icons";
 import { Button } from "@/lib/components/ui";
 import api from "@/lib/api";
 import { Shell } from "@/lib/components/layout/Shell";
@@ -12,11 +12,13 @@ const { Title, Text } = Typography;
 export default function PlatformDashboard() {
     const [schools, setSchools] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [modalLoading, setModalLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
     const [selectedSchool, setSelectedSchool] = useState<any>(null);
     const [form] = Form.useForm();
     const [adminForm] = Form.useForm();
+    const [messageApi, contextHolder] = message.useMessage();
 
     const fetchSchools = async () => {
         setLoading(true);
@@ -37,25 +39,31 @@ export default function PlatformDashboard() {
     }, []);
 
     const onCreateSchool = async (values: any) => {
+        setModalLoading(true);
         try {
             await api.post(`/platform/schools?name=${values.name}&subdomain=${values.subdomain}`);
-            message.success("New school onboarded to the platform.");
+            messageApi.success("New school onboarded to the platform.");
             setIsModalOpen(false);
             form.resetFields();
             fetchSchools();
         } catch (error: any) {
-            message.error(error.response?.data?.detail || "Onboarding failed.");
+            messageApi.error(error.response?.data?.detail || "Onboarding failed.");
+        } finally {
+            setModalLoading(false);
         }
     };
 
     const onCreateAdmin = async (values: any) => {
+        setModalLoading(true);
         try {
             await api.post(`/platform/schools/${selectedSchool.id}/admin`, values);
-            message.success(`School Admin credentials generated for ${selectedSchool.name}`);
+            messageApi.success(`School Admin credentials generated for ${selectedSchool.name}`);
             setIsAdminModalOpen(false);
             adminForm.resetFields();
         } catch (error: any) {
-            message.error(error.response?.data?.detail || "Credential generation failed.");
+            messageApi.error(error.response?.data?.detail || "Credential generation failed.");
+        } finally {
+            setModalLoading(false);
         }
     };
 
@@ -109,6 +117,7 @@ export default function PlatformDashboard() {
 
     return (
         <Shell>
+            {contextHolder}
             <div className="space-y-8">
                 <div className="flex justify-between items-end">
                     <div>
@@ -151,6 +160,7 @@ export default function PlatformDashboard() {
                         columns={columns}
                         dataSource={schools}
                         loading={loading}
+                        rowKey="id"
                         pagination={false}
                         className="custom-table"
                     />
@@ -178,7 +188,7 @@ export default function PlatformDashboard() {
                         </Form.Item>
                         <div className="pt-4 flex justify-end gap-3">
                             <Button variant="ghost" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-                            <Button variant="default" htmlType="submit">Initialize Instance</Button>
+                            <Button variant="default" htmlType="submit" loading={modalLoading}>Initialize Instance</Button>
                         </div>
                     </Form>
                 </Modal>
@@ -204,7 +214,7 @@ export default function PlatformDashboard() {
                         </Form.Item>
                         <div className="pt-4 flex justify-end gap-3">
                             <Button variant="ghost" onClick={() => setIsAdminModalOpen(false)}>Discard</Button>
-                            <Button variant="default" htmlType="submit" icon={<UserAddOutlined />}>Assign Ownership</Button>
+                            <Button variant="default" htmlType="submit" icon={<UserAddOutlined />} loading={modalLoading}>Assign Ownership</Button>
                         </div>
                     </Form>
                 </Modal>

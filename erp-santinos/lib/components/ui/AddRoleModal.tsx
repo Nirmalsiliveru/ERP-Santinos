@@ -15,37 +15,64 @@ interface RoleFormProps {
 export function AddRoleModal({ open, onCancel, onSuccess, initialData }: RoleFormProps) {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
-    const [permissions, setPermissions] = useState([]);
+    const [permissions, setPermissions] = useState<any[]>([]);
     const [messageApi, contextHolder] = message.useMessage();
+    const [checkAll, setCheckAll] = useState(false);
+    const [indeterminate, setIndeterminate] = useState(false);
+
+    const updateCheckAllStatus = React.useCallback((checkedList: any[], totalCount?: number) => {
+        const count = totalCount || permissions.length;
+        setIndeterminate(!!checkedList.length && checkedList.length < count);
+        setCheckAll(checkedList.length === count && count > 0);
+    }, [permissions.length]);
+
+    const fetchPermissions = React.useCallback(async () => {
+        try {
+            const res = await api.get('/permissions');
+            setPermissions(res.data);
+            if (initialData) {
+                const initialIds = initialData.permissions?.map((p: any) => p.id) || [];
+                updateCheckAllStatus(initialIds, res.data.length);
+            }
+        } catch (error) {
+            console.error("Fetch Permissions Error:", error);
+        }
+    }, [initialData, updateCheckAllStatus]);
 
     useEffect(() => {
         if (open) {
             fetchPermissions();
             if (initialData) {
+                const initialIds = initialData.permissions?.map((p: any) => p.id) || [];
                 form.setFieldsValue({
                     name: initialData.name,
-                    permission_ids: initialData.permissions?.map((p: any) => p.id) || []
+                    permission_ids: initialIds
                 });
+                updateCheckAllStatus(initialIds);
             } else {
                 form.resetFields();
+                setCheckAll(false);
+                setIndeterminate(false);
             }
         }
-    }, [open, initialData, form]);
+    }, [open, initialData, form, fetchPermissions, updateCheckAllStatus]);
 
-    const fetchPermissions = async () => {
-        try {
-            const res = await api.get('/permissions');
-            setPermissions(res.data);
-        } catch (error) {
-            console.error("Fetch Permissions Error:", error);
-        }
+    const onCheckAllChange = (e: any) => {
+        const allIds = permissions.map((p: any) => p.id);
+        const newCheckedList = e.target.checked ? allIds : [];
+        form.setFieldsValue({ permission_ids: newCheckedList });
+        setCheckAll(e.target.checked);
+        setIndeterminate(false);
+    };
+
+    const onPermissionChange = (list: any) => {
+        updateCheckAllStatus(list);
     };
 
     const onFinish = async (values: any) => {
         setLoading(true);
         try {
             if (initialData?.id) {
-                // Backend might need update_role endpoint
                 await api.put(`/roles/${initialData.id}`, values);
                 messageApi.success("Role permissions updated.");
             } else {
@@ -93,9 +120,19 @@ export function AddRoleModal({ open, onCancel, onSuccess, initialData }: RoleFor
                 </Form.Item>
 
                 <div>
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-4">Functional Scopes</span>
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Functional Scopes</span>
+                        <Checkbox
+                            indeterminate={indeterminate}
+                            onChange={onCheckAllChange}
+                            checked={checkAll}
+                            className="text-[10px] font-black text-zinc-400 uppercase tracking-widest hover:text-primary transition-colors"
+                        >
+                            Select All
+                        </Checkbox>
+                    </div>
                     <Form.Item name="permission_ids">
-                        <Checkbox.Group className="w-full grid grid-cols-2 gap-4">
+                        <Checkbox.Group className="w-full grid grid-cols-2 gap-4" onChange={onPermissionChange}>
                             {permissions.map((p: any) => (
                                 <div key={p.id} className="p-3 rounded-xl bg-zinc-50 border border-zinc-100 hover:border-primary/20 transition-all flex items-center gap-3">
                                     <Checkbox value={p.id} />

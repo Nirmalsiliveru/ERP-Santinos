@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { Layout, Menu, Button as AntButton, Dropdown, type MenuProps } from "antd";
+import React, { useState, useEffect } from "react";
+import { Layout, Menu, Dropdown, type MenuProps, notification } from "antd";
 import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
@@ -17,14 +17,19 @@ import {
     BellOutlined,
     SearchOutlined,
     LogoutOutlined,
-    SafetyCertificateOutlined
+    SafetyCertificateOutlined,
+    CalendarOutlined,
+    GlobalOutlined
 } from "@ant-design/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ThemeToggle } from "../theme/ThemeToggle";
 import { useUser } from "@/lib/context/UserContext";
-import { GlobalOutlined } from "@ant-design/icons";
+import { useSocket } from "@/lib/hooks/useSocket";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/lib/store/store";
+import { addNotification, markAsRead, clearAllNotifications, markAllAsRead } from "@/lib/store/slices/notificationSlice";
 
 const { Header, Sider, Content } = Layout;
 
@@ -33,17 +38,58 @@ const MotionDiv = motion.div as any;
 export function Shell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
-    const { user, loading: userLoading } = useUser();
+    const { user, refreshUser } = useUser();
+    const socket = useSocket();
+    const dispatch = useDispatch();
+    const notifications = useSelector((state: RootState) => state.notifications.notifications);
     const [collapsed, setCollapsed] = useState(false);
     const [hasMounted, setHasMounted] = React.useState(false);
+    const [api, contextHolder] = notification.useNotification();
 
     React.useEffect(() => {
         setHasMounted(true);
     }, []);
 
+    React.useEffect(() => {
+        if (socket) {
+            if (user?.school_id) {
+                socket.emit("join_room", `school_${user.school_id}`);
+            }
+
+            if (user?.is_platform_admin) {
+                socket.emit("join_room", "platform_admins");
+            }
+
+            // Listen for live notifications
+            socket.on("notification", (data: any) => {
+                // Update Redux notification state
+                dispatch(addNotification({
+                    message: data.message,
+                    description: data.description,
+                    notification_type: data.type || 'info',
+                }));
+
+                api.open({
+                    message: <span className="font-black text-zinc-900 uppercase tracking-tighter italic">{data.message}</span>,
+                    description: <span className="text-zinc-500 font-medium text-xs">{data.description}</span>,
+                    placement: 'bottomRight',
+                    duration: 5,
+                    className: "glass-card !border-zinc-100 !shadow-2xl !rounded-2xl",
+                    icon: <BellOutlined className="text-primary" />
+                });
+            });
+
+            return () => {
+                socket.off("notification");
+            };
+        }
+    }, [socket, user, api, dispatch]);
+
     const handleLogout = () => {
         if (typeof window !== 'undefined') {
             localStorage.removeItem('token');
+            localStorage.removeItem('refresh_token');
+            refreshUser();
             router.push("/");
         }
     };
@@ -51,13 +97,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     const userMenu: MenuProps['items'] = [
         {
             key: 'profile',
-            label: 'My Profile',
-            icon: <UserOutlined />,
-            onClick: () => router.push('/settings')
-        },
-        {
-            key: 'settings',
-            label: 'Account Settings',
+            label: 'Profile & Settings',
             icon: <SettingOutlined />,
             onClick: () => router.push('/settings')
         },
@@ -79,6 +119,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         { key: "/teachers", icon: <TeamOutlined />, label: <Link href="/teachers" className="text-[13px]">Teachers</Link> },
         { key: "/academics", icon: <BookOutlined />, label: <Link href="/academics" className="text-[13px]">Academics</Link> },
         { key: "/attendance", icon: <CheckCircleOutlined />, label: <Link href="/attendance" className="text-[13px]">Attendance</Link> },
+        { key: "/holidays", icon: <CalendarOutlined />, label: <Link href="/holidays" className="text-[13px]">Holidays</Link> },
         { key: "/exams", icon: <FileProtectOutlined />, label: <Link href="/exams" className="text-[13px]">Exams</Link> },
         { key: "/fees", icon: <DollarOutlined />, label: <Link href="/fees" className="text-[13px]">Fees</Link> },
         { key: "/reports", icon: <BarChartOutlined />, label: <Link href="/reports" className="text-[13px]">Reports</Link> },
@@ -99,6 +140,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
     return (
         <Layout className="h-screen overflow-hidden bg-white">
+            {contextHolder}
             <Sider
                 collapsible
                 collapsed={collapsed}
@@ -173,20 +215,91 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
                         <div className="flex items-center gap-2">
                             <ThemeToggle />
-                            <button className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 transition-all relative">
-                                <BellOutlined />
-                                <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-primary rounded-full border-2 border-white" />
+
+                            {/* Manual Automation Trigger for Demo */}
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        api.info({ message: "Sync Initiated", description: "Backend is scanning for daily events...", placement: 'bottomRight' });
+                                        await fetch("http://localhost:8000/system/trigger-daily-checks", { method: 'POST' });
+                                    } catch (e) {
+                                        console.error("Sync Trigger Failed", e);
+                                    }
+                                }}
+                                className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-primary hover:bg-primary/5 transition-all"
+                                title="Sync Daily Events"
+                            >
+                                <TeamOutlined className="text-[14px]" />
                             </button>
+
+                            <Dropdown
+                                trigger={['click']}
+                                placement="bottomRight"
+                                popupRender={() => (
+                                    <div className="glass-card w-80 p-4 !shadow-2xl !bg-white">
+                                        <div className="flex items-center justify-between mb-4 pb-2 border-b border-zinc-50">
+                                            <span className="text-[10px] font-black text-zinc-900 uppercase tracking-widest">Notification Registry</span>
+                                            <span
+                                                className="text-[9px] font-bold text-primary cursor-pointer hover:underline"
+                                                onClick={() => dispatch(clearAllNotifications())}
+                                            >
+                                                Clear All
+                                            </span>
+                                        </div>
+                                        <div className="max-h-64 overflow-y-auto space-y-3 pr-1">
+                                            {notifications.length === 0 ? (
+                                                <div className="py-8 text-center">
+                                                    <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">No active alerts</p>
+                                                </div>
+                                            ) : (
+                                                notifications.map(n => (
+                                                    <div
+                                                        key={n.id}
+                                                        onClick={() => dispatch(markAsRead(n.id))}
+                                                        className={`p-3 rounded-xl border transition-all group cursor-pointer ${n.read
+                                                            ? 'bg-zinc-50/50 border-zinc-50 opacity-60'
+                                                            : 'bg-white border-zinc-100 hover:border-primary/20 shadow-sm'
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-center justify-between">
+                                                            <p className={`text-[11px] font-black uppercase tracking-tighter italic leading-none ${n.read ? 'text-zinc-500' : 'text-zinc-900'}`}>{n.message}</p>
+                                                            {!n.read && <div className="w-1.5 h-1.5 bg-primary rounded-full" />}
+                                                        </div>
+                                                        <p className="text-[10px] text-zinc-500 mt-1 lines-2 font-medium">{n.description}</p>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            >
+                                <button className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 transition-all relative">
+                                    <BellOutlined />
+                                    {notifications.filter(n => !n.read).length > 0 && (
+                                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-white text-[8px] font-black text-white flex items-center justify-center animate-in fade-in zoom-in duration-300">
+                                            {notifications.filter(n => !n.read).length}
+                                        </span>
+                                    )}
+                                </button>
+                            </Dropdown>
 
                             <div className="h-4 w-[1px] bg-zinc-200 mx-1" />
 
                             <Dropdown menu={{ items: userMenu }} trigger={['click']} placement="bottomRight">
                                 <button className="flex items-center gap-2 pl-2 group outline-none">
                                     <span className="text-xs font-bold text-zinc-900 hidden md:block font-sans">
-                                        {user?.email?.split('@')[0] || 'Admin'}
+                                        {user?.full_name || user?.email?.split('@')[0] || 'Admin'}
                                     </span>
-                                    <div className="w-8 h-8 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-[10px] font-black text-zinc-900 group-hover:bg-zinc-200 transition-all font-sans relative">
-                                        {user?.email?.substring(0, 2).toUpperCase() || 'AD'}
+                                    <div className="w-8 h-8 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-[10px] font-black text-zinc-900 group-hover:bg-zinc-200 transition-all font-sans relative overflow-hidden">
+                                        {user?.profile_photo ? (
+                                            <img
+                                                src={`http://localhost:8000${user.profile_photo}`}
+                                                alt="Profile"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            user?.full_name ? user.full_name.substring(0, 2).toUpperCase() : (user?.email?.substring(0, 2).toUpperCase() || 'AD')
+                                        )}
                                         <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white" />
                                     </div>
                                 </button>

@@ -22,7 +22,20 @@ import {
     Bar
 } from 'recharts';
 import api from "@/lib/api";
-import { Tag } from "antd";
+import { Tag, Calendar, Badge, List, Button as AntButton } from "antd";
+import { ClockCircleOutlined, PushpinOutlined, TrophyOutlined, BellOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
+
+const upcomingEvents = [
+    { id: 1, title: 'Annual Sports Meet', date: 'Oct 24, 2024', type: 'success', icon: <TrophyOutlined /> },
+    { id: 2, title: 'Parent-Teacher Meeting', date: 'Oct 28, 2024', type: 'warning', icon: <BellOutlined /> },
+    { id: 3, title: 'Science Exhibition', date: 'Nov 02, 2024', type: 'processing', icon: <PushpinOutlined /> },
+];
+
+const reminders = [
+    { id: 1, text: 'Submit Monthly Attendance Report', time: 'Today, 4:00 PM' },
+    { id: 2, text: 'Staff Meeting - Room 204', time: 'Tomorrow, 10:00 AM' },
+];
 
 const performanceData = [
     { name: 'Jan', score: 85 },
@@ -196,6 +209,110 @@ export default function Dashboard() {
                                     />
                                 </BarChart>
                             </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+
+                {/* New Calendar and Events Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Premium Calendar */}
+                    <div className="lg:col-span-2 glass-card p-8">
+                        <div className="flex items-center justify-between mb-8">
+                            <div>
+                                <h3 className="font-black text-zinc-900 text-sm uppercase tracking-widest text-gradient">Schedule Nexus</h3>
+                                <p className="text-zinc-400 text-[10px] font-medium mt-1 uppercase tracking-wider">Institutional Operating Calendar</p>
+                            </div>
+                        </div>
+                        <div className="custom-calendar-container border border-zinc-100 rounded-2xl overflow-hidden p-6 bg-white/60 shadow-inner">
+                            <Calendar
+                                fullscreen={false}
+                                className="premium-calendar"
+                                headerRender={({ value, onChange }) => {
+                                    const current = value.clone();
+                                    return (
+                                        <div className="flex items-center justify-between mb-8 px-2">
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-black text-zinc-900 uppercase tracking-tighter">
+                                                    {current.format('MMMM')}
+                                                </span>
+                                                <span className="text-[10px] font-bold text-primary tracking-[0.2em] uppercase">
+                                                    Cycle {current.format('YYYY')}
+                                                </span>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <AntButton
+                                                    size="small"
+                                                    shape="circle"
+                                                    icon={<LeftOutlined className="text-[10px]" />}
+                                                    onClick={() => onChange(current.add(-1, 'month'))}
+                                                    className="border-zinc-200 bg-white hover:border-primary text-zinc-400 hover:text-primary transition-all"
+                                                />
+                                                <AntButton
+                                                    size="small"
+                                                    shape="circle"
+                                                    icon={<RightOutlined className="text-[10px]" />}
+                                                    onClick={() => onChange(current.add(1, 'month'))}
+                                                    className="border-zinc-200 bg-white hover:border-primary text-zinc-400 hover:text-primary transition-all"
+                                                />
+                                            </div>
+                                        </div>
+                                    );
+                                }}
+                                cellRender={(date) => {
+                                    const dateStr = date.format('MMM DD, YYYY');
+                                    const hasEvent = upcomingEvents.some(e => e.date === dateStr);
+                                    return hasEvent ? (
+                                        <div className="flex justify-center mt-1">
+                                            <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+                                        </div>
+                                    ) : null;
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Events & Reminders */}
+                    <div className="space-y-8">
+                        <div className="glass-card p-8">
+                            <h3 className="font-black text-zinc-900 text-sm uppercase tracking-widest mb-6 flex items-center gap-2">
+                                <TrophyOutlined className="text-primary" />
+                                Event Registry
+                            </h3>
+                            <div className="space-y-4">
+                                {upcomingEvents.map(event => (
+                                    <div key={event.id} className="flex items-start gap-4 p-4 rounded-2xl bg-zinc-50 border border-zinc-100 hover:border-primary/20 transition-all group">
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm shadow-sm ${event.type === 'success' ? 'bg-emerald-50 text-emerald-600' :
+                                            event.type === 'warning' ? 'bg-orange-50 text-orange-600' : 'bg-primary/5 text-primary'
+                                            }`}>
+                                            {event.icon}
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="text-[11px] font-black text-zinc-900 uppercase tracking-tight">{event.title}</h4>
+                                            <p className="text-[10px] font-bold text-zinc-400 mt-0.5">{event.date}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="glass-card p-8 border-l-4 border-l-primary">
+                            <h3 className="font-black text-zinc-900 text-sm uppercase tracking-widest mb-6 flex items-center gap-2">
+                                <ClockCircleOutlined className="text-primary" />
+                                Critical Reminders
+                            </h3>
+                            <List
+                                className="reminder-list"
+                                dataSource={reminders}
+                                renderItem={item => (
+                                    <List.Item className="border-none px-0 py-3">
+                                        <List.Item.Meta
+                                            avatar={<Badge status={item.time.includes('Today') ? 'error' : 'processing'} />}
+                                            title={<span className="text-[11px] font-bold text-zinc-700">{item.text}</span>}
+                                            description={<span className="text-[10px] text-zinc-400 font-medium uppercase tracking-widest">{item.time}</span>}
+                                        />
+                                    </List.Item>
+                                )}
+                            />
                         </div>
                     </div>
                 </div>

@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { message } from "antd";
+import { useUser } from "@/lib/context/UserContext";
 
 const MotionDiv = motion.div as any;
 
@@ -16,6 +17,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
+  const { refreshUser } = useUser();
   const [messageApi, contextHolder] = message.useMessage();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -26,10 +28,14 @@ export default function LoginPage() {
       const response = await api.post('/login', { email, password });
 
       if (response.data.access_token) {
-        // Save token
+        // Save tokens
         localStorage.setItem('token', response.data.access_token);
+        localStorage.setItem('refresh_token', response.data.refresh_token);
         // Update axios defaults
         api.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`;
+
+        // Refresh user context
+        await refreshUser();
 
         messageApi.success("Atmospheric Link Established. Welcome.");
 

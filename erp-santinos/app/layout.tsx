@@ -1,8 +1,10 @@
+import "@ant-design/v5-patch-for-react-19";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NotificationProvider } from "@/lib/context/NotificationContext";
 import { BrandingProvider } from "@/lib/context/BrandingContext";
 import { UserProvider } from "@/lib/context/UserContext";
+import { ReduxProvider } from "@/lib/store/ReduxProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,13 +33,15 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <NotificationProvider>
-          <BrandingProvider>
-            <UserProvider>
-              {children}
-            </UserProvider>
-          </BrandingProvider>
-        </NotificationProvider>
+        <ReduxProvider>
+          <NotificationProvider>
+            <BrandingProvider>
+              <UserProvider>
+                {children}
+              </UserProvider>
+            </BrandingProvider>
+          </NotificationProvider>
+        </ReduxProvider>
       </body>
     </html>
   );

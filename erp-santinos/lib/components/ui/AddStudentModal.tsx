@@ -97,9 +97,17 @@ export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps)
                     <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">High-Fidelity Unified Profile</p>
                 </div>
             }
-            width={800}
+            width={720}
             className="custom-modal"
             centered
+            styles={{
+                body: {
+                    maxHeight: 'calc(100vh - 220px)',
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
+                    paddingRight: '8px'
+                }
+            }}
         >
             <Form
                 form={form}
@@ -149,7 +157,7 @@ export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps)
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <Form.Item name="date_of_birth" label={<span className="label-text">Date of Birth</span>} rules={[{ required: true }]}>
-                                        <DatePicker className="w-full custom-datepicker" />
+                                        <DatePicker className="w-full custom-datepicker" placement="bottomRight" />
                                     </Form.Item>
                                     <Form.Item name="gender" label={<span className="label-text">Gender</span>}>
                                         <Select className="custom-select w-full" options={[{ value: 'Male', label: 'Male' }, { value: 'Female', label: 'Female' }, { value: 'Other', label: 'Other' }]} />
@@ -181,7 +189,7 @@ export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps)
                                     <Input className="h-11 rounded-xl" placeholder="REG-24-XXX" />
                                 </Form.Item>
                                 <Form.Item name="admission_date" label={<span className="label-text">Admission Date</span>}>
-                                    <DatePicker className="w-full custom-datepicker" />
+                                    <DatePicker className="w-full custom-datepicker" placement="bottomRight" />
                                 </Form.Item>
                             </div>
                             <div className="grid grid-cols-2 gap-4">

@@ -137,6 +137,10 @@ a {
   transition: all 0.2s ease !important;
 }
 
+.ant-picker-dropdown {
+  z-index: 99999 !important;
+}
+
 .custom-select .ant-select-selector:hover,
 .custom-datepicker:hover {
   border-color: var(--primary) !important;
@@ -166,4 +170,49 @@ html,
 body {
   height: 100%;
   overflow: hidden;
+}
+
+/* Premium Calendar Customization */
+.premium-calendar {
+  @apply !bg-transparent border-none;
+}
+
+.premium-calendar .ant-picker-calendar-header {
+  @apply !m-0 !p-0;
+}
+
+.premium-calendar .ant-picker-panel {
+  @apply !border-none;
+}
+
+.premium-calendar .ant-picker-cell {
+  @apply p-0.5;
+}
+
+.premium-calendar .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner::before {
+  @apply !border-primary/30 !rounded-xl;
+}
+
+.premium-calendar .ant-picker-cell-inner {
+  @apply !rounded-xl !border-none !h-12 !w-full !flex !flex-col !items-center !justify-center !text-[11px] !font-bold transition-all !bg-transparent text-zinc-600 !m-0;
+}
+
+.premium-calendar .ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner {
+  @apply !bg-primary !text-white shadow-xl shadow-primary/20 scale-[1.05] z-10;
+}
+
+.premium-calendar .ant-picker-cell:hover:not(.ant-picker-cell-selected) .ant-picker-cell-inner {
+  @apply !bg-primary/5 !text-primary;
+}
+
+.premium-calendar .ant-picker-calendar-date-value {
+  @apply !m-0 !p-0 !leading-none;
+}
+
+.premium-calendar .ant-picker-content th {
+  @apply !text-[9px] !font-black !text-zinc-400 !uppercase !tracking-[0.3em] !pb-6;
+}
+
+.premium-calendar .ant-picker-calendar-date-content {
+  @apply !m-0 !h-auto !min-h-0;
 }

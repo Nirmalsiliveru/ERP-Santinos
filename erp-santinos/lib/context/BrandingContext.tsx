@@ -2,6 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { ConfigProvider, theme } from "antd";
+import { useDispatch, useSelector } from "react-redux";
+import { setColors as setReduxColors, resetBranding as resetReduxBranding } from "@/lib/store/slices/brandingSlice";
+import { RootState } from "@/lib/store/store";
 
 interface BrandingColors {
     primary: string;
@@ -31,6 +34,7 @@ const BrandingContext = createContext<BrandingContextType | undefined>(undefined
 
 export function BrandingProvider({ children }: { children: React.ReactNode }) {
     const [colors, setColorsState] = useState<BrandingColors>(defaultColors);
+    const dispatch = useDispatch();
 
     // Initialize from localStorage if available
     useEffect(() => {
@@ -44,6 +48,7 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
                 // paint to complete.
                 requestAnimationFrame(() => {
                     setColorsState(parsed);
+                    dispatch(setReduxColors(parsed));
 
                     // Sync CSS Variables on initial load
                     const root = document.documentElement;
@@ -55,11 +60,12 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
                 console.error("Failed to parse saved branding", e);
             }
         }
-    }, []);
+    }, [dispatch]);
 
     const updateColors = (newColors: Partial<BrandingColors>) => {
         const updated = { ...colors, ...newColors };
         setColorsState(updated);
+        dispatch(setReduxColors(newColors));
         localStorage.setItem("school-branding", JSON.stringify(updated));
 
         // Update CSS Variables
@@ -71,6 +77,7 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
 
     const resetBranding = () => {
         setColorsState(defaultColors);
+        dispatch(resetReduxBranding());
         localStorage.removeItem("school-branding");
 
         const root = document.documentElement;
