@@ -102,7 +102,7 @@ export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps)
             centered
             styles={{
                 body: {
-                    maxHeight: 'calc(100vh - 220px)',
+                    maxHeight: 'calc(100vh - 180px)',
                     overflowY: 'auto',
                     overflowX: 'hidden',
                     paddingRight: '8px'
