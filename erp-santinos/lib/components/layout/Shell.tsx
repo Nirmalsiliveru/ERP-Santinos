@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Layout, Menu, Dropdown, type MenuProps, notification } from "antd";
+import { Layout, Menu, Dropdown, type MenuProps, notification, Drawer } from "antd";
 import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
@@ -44,7 +44,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
     const dispatch = useDispatch();
     const notifications = useSelector((state: RootState) => state.notifications.notifications);
     const [collapsed, setCollapsed] = useState(false);
-    const [hasMounted, setHasMounted] = React.useState(false);
+    const [mobileVisible, setMobileVisible] = useState(false);
+    const [hasMounted, setHasMounted] = useState(false);
     const [api, contextHolder] = notification.useNotification();
 
     React.useEffect(() => {
@@ -139,9 +140,50 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
     if (!hasMounted) return <div className="min-h-screen bg-white" />;
 
+    const SidebarContent = (
+        <div className="h-full flex flex-col">
+            <div className="p-8 pb-10 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-white text-xl font-black shadow-sm font-sans">
+                    {user?.is_platform_admin ? 'P' : 'B'}
+                </div>
+                {(!collapsed || mobileVisible) && (
+                    <div className="flex flex-col">
+                        <span className="text-sm font-black text-primary uppercase tracking-tight leading-none font-sans">
+                            {user?.is_platform_admin ? 'Platform Admin' : 'BodhiEdu'}
+                        </span>
+                        <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mt-1 font-sans">
+                            {user?.is_platform_admin ? 'Multi-tenant Control' : 'SaaS ERP'}
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            <div className="px-1 custom-menu flex-1 overflow-y-auto">
+                <Menu
+                    mode="inline"
+                    theme="light"
+                    selectedKeys={[pathname]}
+                    items={menuItems}
+                    onClick={() => setMobileVisible(false)}
+                    className="border-none !bg-transparent"
+                />
+            </div>
+
+            {!user?.is_platform_admin && (
+                <div className="mx-6 mt-auto mb-8 p-5 rounded-2xl bg-zinc-50 border border-zinc-100 relative group transition-all">
+                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em] leading-none">Support</p>
+                    <p className="text-[11px] font-medium text-zinc-500 mt-2 leading-relaxed">Need help with the platform?</p>
+                    <button className="text-[10px] font-bold text-zinc-900 mt-4 block hover:underline uppercase tracking-widest">Documentation</button>
+                </div>
+            )}
+        </div>
+    );
+
     return (
         <Layout className="h-screen overflow-hidden bg-white">
             {contextHolder}
+
+            {/* Desktop Sidebar */}
             <Sider
                 collapsible
                 collapsed={collapsed}
@@ -151,50 +193,37 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 width={260}
                 trigger={null}
             >
-                <div className="p-8 pb-10 flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-white text-xl font-black shadow-sm font-sans">
-                        {user?.is_platform_admin ? 'P' : 'B'}
-                    </div>
-                    {!collapsed && (
-                        <div className="flex flex-col">
-                            <span className="text-sm font-black text-primary uppercase tracking-tight leading-none font-sans">
-                                {user?.is_platform_admin ? 'Platform Admin' : 'BodhiEdu'}
-                            </span>
-                            <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mt-1 font-sans">
-                                {user?.is_platform_admin ? 'Multi-tenant Control' : 'SaaS ERP'}
-                            </span>
-                        </div>
-                    )}
-                </div>
-
-                <div className="px-1 custom-menu">
-                    <Menu
-                        mode="inline"
-                        theme="light"
-                        selectedKeys={[pathname]}
-                        items={menuItems}
-                        className="border-none !bg-transparent"
-                    />
-                </div>
-
-                {/* Support Card - Hide for Platform Admin as they are the support */}
-                {!collapsed && !user?.is_platform_admin && (
-                    <div className="mx-6 mt-12 p-5 rounded-2xl bg-zinc-50 border border-zinc-100 relative group transition-all">
-                        <p className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.2em] leading-none">Support</p>
-                        <p className="text-[11px] font-medium text-zinc-500 mt-2 leading-relaxed">Need help with the platform?</p>
-                        <button className="text-[10px] font-bold text-zinc-900 mt-4 block hover:underline uppercase tracking-widest">Documentation</button>
-                    </div>
-                )}
+                {SidebarContent}
             </Sider>
+
+            {/* Mobile Drawer */}
+            <Drawer
+                placement="left"
+                onClose={() => setMobileVisible(false)}
+                open={mobileVisible}
+                width={280}
+                styles={{ body: { padding: 0 } }}
+                closable={false}
+                className="mobile-drawer"
+            >
+                {SidebarContent}
+            </Drawer>
 
             <Layout className="!bg-white flex flex-col h-full">
                 <Header className="!bg-white px-8 h-12 flex items-center justify-between border-b border-zinc-100 z-[100] flex-shrink-0">
                     <div className="flex items-center gap-6">
                         <button
                             onClick={() => setCollapsed(!collapsed)}
-                            className="text-zinc-400 hover:text-zinc-900 transition-colors"
+                            className="text-zinc-400 hover:text-zinc-900 transition-colors hidden md:block" // Desktop collapse
                         >
                             {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                        </button>
+
+                        <button
+                            onClick={() => setMobileVisible(true)}
+                            className="text-zinc-400 hover:text-zinc-900 transition-colors md:hidden" // Mobile hamburger
+                        >
+                            <MenuUnfoldOutlined />
                         </button>
 
                         <div className="hidden lg:flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-sans">
