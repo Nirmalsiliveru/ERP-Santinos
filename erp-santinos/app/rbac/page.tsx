@@ -119,6 +119,7 @@ export default function RBACPage() {
                                 rowKey="id"
                                 pagination={false}
                                 rowClassName="hover:bg-zinc-50/50 transition-all h-20"
+                                scroll={{ x: 'max-content' }}
                             />
                         )}
                     </div>

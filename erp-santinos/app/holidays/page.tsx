@@ -154,6 +154,7 @@ export default function HolidaysPage() {
                         loading={loading}
                         pagination={false}
                         rowClassName="h-16"
+                        scroll={{ x: 'max-content' }}
                     />
                 </div>
             </div>

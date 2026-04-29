@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Shell } from "@/lib/components/layout";
-import { Table, message, Tag } from "antd";
+import { Table, message, Tag, Tooltip } from "antd";
 import { Button, AddClassModal, AddSectionModal } from "@/lib/components/ui";
 import {
     PlusOutlined,
@@ -77,13 +77,37 @@ export default function AcademicsPage() {
             key: 'sections',
             render: (r: any) => {
                 const classSections = sections.filter((s: any) => s.class_id === r.id);
+                const visibleSections = classSections.slice(0, 2);
+                const hiddenSections = classSections.slice(2);
+
                 return (
-                    <div className="flex flex-wrap gap-2">
-                        {classSections.length > 0 ? classSections.map((s: any) => (
-                            <Tag key={s.id} className="bg-zinc-100 text-zinc-600 border-none font-bold text-[10px] rounded-lg px-3">
-                                Section {s.name}
-                            </Tag>
-                        )) : <span className="text-zinc-300 text-[10px] font-bold uppercase tracking-widest">No Sections Assigned</span>}
+                    <div className="flex flex-wrap items-center gap-2">
+                        {classSections.length > 0 ? (
+                            <>
+                                {visibleSections.map((s: any) => (
+                                    <Tag key={s.id} className="bg-zinc-100 text-zinc-600 border-none font-bold text-[10px] rounded-lg px-3 m-0">
+                                        Section {s.name}
+                                    </Tag>
+                                ))}
+                                {hiddenSections.length > 0 && (
+                                    <Tooltip 
+                                        title={
+                                            <div className="flex flex-col gap-1 text-xs">
+                                                {hiddenSections.map((s: any) => (
+                                                    <span key={s.id}>Section {s.name}</span>
+                                                ))}
+                                            </div>
+                                        }
+                                    >
+                                        <Tag className="bg-zinc-200 hover:bg-zinc-300 text-zinc-700 border-none font-bold text-[10px] rounded-lg px-3 cursor-pointer m-0 transition-colors">
+                                            +{hiddenSections.length} more
+                                        </Tag>
+                                    </Tooltip>
+                                )}
+                            </>
+                        ) : (
+                            <span className="text-zinc-300 text-[10px] font-bold uppercase tracking-widest">No Sections Assigned</span>
+                        )}
                     </div>
                 )
             }
@@ -186,6 +210,7 @@ export default function AcademicsPage() {
                                     className="border-none"
                                     rowClassName="hover:bg-zinc-50/50 transition-all h-20"
                                     rowKey="id"
+                                    scroll={{ x: 'max-content' }}
                                 />
                             )}
                         </div>

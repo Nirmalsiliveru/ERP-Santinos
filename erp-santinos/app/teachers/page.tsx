@@ -181,6 +181,7 @@ export default function TeachersPage() {
                                         onChange: (p, s) => { setPage(p); setPageSize(s); },
                                         className: "custom-pagination px-4 pb-4"
                                     }}
+                                    scroll={{ x: 'max-content' }}
                                 />
                             )}
                         </div>

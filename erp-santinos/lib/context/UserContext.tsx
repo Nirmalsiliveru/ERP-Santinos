@@ -5,6 +5,12 @@ import api from "@/lib/api";
 import { useDispatch } from "react-redux";
 import { setUser as setReduxUser, clearUser as clearReduxUser } from "@/lib/store/slices/userSlice";
 
+interface Session {
+    id: number;
+    name: string;
+    is_active: boolean;
+}
+
 interface User {
     id: number;
     email: string;
@@ -20,20 +26,25 @@ interface User {
 
 interface UserContextType {
     user: User | null;
+    activeSession: Session | null;
     loading: boolean;
-    refreshUser: () => Promise<void>;
+    refreshUser: () => Promise<User | null>;
+    setActiveSession: (session: Session) => void;
 }
 
 const UserContext = createContext<UserContextType>({
     user: null,
+    activeSession: null,
     loading: true,
-    refreshUser: async () => { },
+    refreshUser: async () => null,
+    setActiveSession: () => { },
 });
 
 export const useUser = () => useContext(UserContext);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
+    const [activeSession, setActiveSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState(true);
     const dispatch = useDispatch();
 
@@ -41,21 +52,28 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         const token = localStorage.getItem("token");
         if (!token) {
             setUser(null);
+            setActiveSession(null);
             dispatch(clearReduxUser());
             setLoading(false);
-            return;
+            return null;
         }
 
         try {
             const response = await api.get("/");
             const userData = response.data.user;
+            const sessionData = response.data.active_session;
+            
             setUser(userData);
+            setActiveSession(sessionData); // Store initial active session from backend
             dispatch(setReduxUser(userData));
+            return userData;
         } catch (error) {
             console.error("Failed to fetch user:", error);
             localStorage.removeItem("token");
             setUser(null);
+            setActiveSession(null);
             dispatch(clearReduxUser());
+            return null;
         } finally {
             setLoading(false);
         }
@@ -66,7 +84,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }, [fetchUser]);
 
     return (
-        <UserContext.Provider value={{ user, loading, refreshUser: fetchUser }}>
+        <UserContext.Provider value={{ 
+            user, 
+            activeSession, 
+            loading, 
+            refreshUser: fetchUser,
+            setActiveSession
+        }}>
             {children}
         </UserContext.Provider>
     );

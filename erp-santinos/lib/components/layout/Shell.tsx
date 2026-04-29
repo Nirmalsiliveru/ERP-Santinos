@@ -26,6 +26,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { ThemeToggle } from "../theme/ThemeToggle";
+import { SessionSwitcher } from "./SessionSwitcher";
 import { useUser } from "@/lib/context/UserContext";
 import { useSocket } from "@/lib/hooks/useSocket";
 import { useDispatch, useSelector } from "react-redux";
@@ -127,16 +128,28 @@ export function Shell({ children }: { children: React.ReactNode }) {
         { key: "/reports", icon: <BarChartOutlined />, label: <Link href="/reports" className="text-[13px]">Reports</Link> },
         { key: "/users", icon: <SafetyCertificateOutlined />, label: <Link href="/users" className="text-[13px]">User Management</Link> },
         { key: "/rbac", icon: <FileProtectOutlined />, label: <Link href="/rbac" className="text-[13px]">Roles & Permissions</Link> },
+        { type: 'divider' },
+        { key: "/settings/academic-years", icon: <CalendarOutlined />, label: <Link href="/settings/academic-years" className="text-[13px] font-bold">Academic Sessions</Link> },
         { key: "/settings", icon: <SettingOutlined />, label: <Link href="/settings" className="text-[13px]">Settings</Link> },
     ];
 
-    const menuItems: MenuProps['items'] = user?.is_platform_admin
-        ? [
+    let menuItems: MenuProps['items'] = [];
+    if (user?.is_platform_admin) {
+        menuItems = [
             { key: "/platform", icon: <GlobalOutlined />, label: <Link href="/platform" className="text-[13px] font-bold text-primary">School Management</Link> } as any,
             { type: 'divider' } as any,
             ...baseMenuItems
-        ]
-        : baseMenuItems;
+        ];
+    } else if (user?.role === 'parent') {
+        menuItems = [
+            { key: "/parent-dashboard", icon: <DashboardOutlined />, label: <Link href="/parent-dashboard" className="text-[13px]">My Dashboard</Link> },
+            { key: "/attendance", icon: <CheckCircleOutlined />, label: <Link href="/attendance" className="text-[13px]">Attendance</Link> },
+            { key: "/fees", icon: <DollarOutlined />, label: <Link href="/fees" className="text-[13px]">Fees</Link> },
+            { key: "/reports", icon: <BarChartOutlined />, label: <Link href="/reports" className="text-[13px]">Report Cards</Link> },
+        ];
+    } else {
+        menuItems = baseMenuItems;
+    }
 
     if (!hasMounted) return <div className="min-h-screen bg-white" />;
 
@@ -231,6 +244,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
                             <span className="text-zinc-200">/</span>
                             <span className="text-zinc-900">{pathname?.split('/')[1]?.toUpperCase() || 'OVERVIEW'}</span>
                         </div>
+
+                        {!user?.is_platform_admin && (
+                            <div className="ml-6 pl-6 border-l border-zinc-100">
+                                <SessionSwitcher />
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex items-center gap-5">

@@ -163,6 +163,7 @@ export default function PlatformDashboard() {
                         rowKey="id"
                         pagination={false}
                         className="custom-table"
+                        scroll={{ x: 'max-content' }}
                     />
                 </Card>
 

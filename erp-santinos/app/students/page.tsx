@@ -130,6 +130,7 @@ export default function StudentsPage() {
                                 className="border-none"
                                 rowClassName="hover:bg-zinc-50/50 transition-all h-16 cursor-pointer"
                                 rowKey="id"
+                                scroll={{ x: 'max-content' }}
                             />
                             <div className="p-4 border-t border-zinc-50 flex flex-col sm:flex-row items-center justify-between bg-zinc-50/30 gap-4">
                                 <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none">

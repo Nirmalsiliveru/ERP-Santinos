@@ -42,15 +42,15 @@ export default function FeesPage() {
                     <Table
                         dataSource={feeRecords}
                         columns={[
-                            { title: 'INVOICE', dataIndex: 'id', key: 'id', render: (t) => <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{t}</span> },
-                            { title: 'STUDENT', dataIndex: 'name', key: 'name', render: (t) => <span className="text-sm font-bold text-zinc-900">{t}</span> },
-                            { title: 'AMOUNT', dataIndex: 'amount', key: 'amount', render: (t) => <span className="text-sm font-black text-zinc-900">{t}</span> },
-                            { title: 'DUE DATE', dataIndex: 'date', key: 'date', render: (t) => <span className="text-xs text-zinc-400 font-medium">{t}</span> },
+                            { title: 'INVOICE', dataIndex: 'id', key: 'id', render: (t: any) => <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{t}</span> },
+                            { title: 'STUDENT', dataIndex: 'name', key: 'name', render: (t: any) => <span className="text-sm font-bold text-zinc-900">{t}</span> },
+                            { title: 'AMOUNT', dataIndex: 'amount', key: 'amount', render: (t: any) => <span className="text-sm font-black text-zinc-900">{t}</span> },
+                            { title: 'DUE DATE', dataIndex: 'date', key: 'date', render: (t: any) => <span className="text-xs text-zinc-400 font-medium">{t}</span> },
                             {
                                 title: 'STATUS',
                                 dataIndex: 'status',
                                 key: 'status',
-                                render: (s) => (
+                                render: (s: any) => (
                                     <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${s === 'Paid' ? 'bg-emerald-100 text-emerald-700' : s === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>{s}</span>
                                 )
                             },
@@ -59,6 +59,7 @@ export default function FeesPage() {
                         pagination={false}
                         className="border-none"
                         rowClassName="hover:bg-zinc-50/50 transition-all h-20"
+                        scroll={{ x: 'max-content' }}
                     />
                 </div>
             </div>

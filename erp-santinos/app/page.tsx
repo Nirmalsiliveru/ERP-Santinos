@@ -34,12 +34,14 @@ export default function LoginPage() {
         api.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`;
 
         // Refresh user context
-        await refreshUser();
+        const fetchedUser = await refreshUser();
 
         messageApi.success("Atmospheric Link Established. Welcome.");
 
         if (response.data.is_platform_admin) {
           router.push("/platform");
+        } else if (fetchedUser?.role === 'parent') {
+          router.push("/parent-dashboard");
         } else {
           router.push("/dashboard");
         }

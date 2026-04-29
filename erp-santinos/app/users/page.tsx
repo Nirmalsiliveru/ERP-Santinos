@@ -140,6 +140,7 @@ export default function UsersPage() {
                                 className="border-none"
                                 rowClassName="hover:bg-zinc-50/50 transition-all h-20"
                                 rowKey="id"
+                                scroll={{ x: 'max-content' }}
                             />
                             <div className="p-4 border-t border-zinc-50 bg-zinc-50/30">
                                 <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
