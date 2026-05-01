@@ -66,9 +66,12 @@ export default function StudentsPage() {
         },
         {
             title: 'CLASS',
-            dataIndex: 'class_id',
             key: 'class_id',
-            render: (t: number) => <Tag color="blue" className="rounded-full px-3 border-none font-bold text-[10px]">Grade {t || '?'}</Tag>
+            render: (_: any, record: any) => (
+                <Tag color="blue" className="rounded-full px-3 border-none font-bold text-[10px]">
+                    {record.class_obj?.name || `Grade ${record.class_id || '?'}`}
+                </Tag>
+            )
         },
         {
             title: 'STATUS',

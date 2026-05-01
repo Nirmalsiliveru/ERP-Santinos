@@ -92,8 +92,8 @@ export default function AcademicYearsPage() {
             dataIndex: 'is_active',
             key: 'is_active',
             render: (active: boolean) => (
-                <Tag 
-                    color={active ? '#10b981' : '#e4e4e7'} 
+                <Tag
+                    color={active ? '#10b981' : '#e4e4e7'}
                     className={`rounded-lg px-4 py-1.5 border-none text-[10px] uppercase font-black tracking-widest ${active ? 'text-white' : 'text-zinc-600'}`}
                 >
                     {active ? 'CURRENT ACTIVE' : 'PREVIOUS SESSION'}
@@ -181,8 +181,8 @@ export default function AcademicYearsPage() {
                     open={isModalOpen}
                     onCancel={() => setIsModalOpen(false)}
                     footer={null}
-                    centered
                     width={500}
+                    style={{ top: 20 }}
                 >
                     <Form form={form} layout="vertical" onFinish={onCreateYear} className="pt-6 space-y-4">
                         <Form.Item name="name" label={<span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Session Name</span>} rules={[{ required: true }]} help="e.g. 2025-26">
@@ -190,10 +190,10 @@ export default function AcademicYearsPage() {
                         </Form.Item>
                         <div className="grid grid-cols-2 gap-4">
                             <Form.Item name="start_date" label={<span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Start Date</span>} rules={[{ required: true }]}>
-                                <DatePicker className="w-full h-11 rounded-xl" />
+                                <DatePicker placement="bottomLeft" className="w-full h-11 rounded-xl" getPopupContainer={(trigger) => trigger.parentElement as HTMLElement} />
                             </Form.Item>
                             <Form.Item name="end_date" label={<span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">End Date</span>} rules={[{ required: true }]}>
-                                <DatePicker className="w-full h-11 rounded-xl" />
+                                <DatePicker placement="bottomLeft" className="w-full h-11 rounded-xl" getPopupContainer={(trigger) => trigger.parentElement as HTMLElement} />
                             </Form.Item>
                         </div>
                         <Form.Item name="is_active" valuePropName="checked">
