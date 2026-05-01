@@ -32,6 +32,7 @@ import { useSocket } from "@/lib/hooks/useSocket";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/lib/store/store";
 import { addNotification, markAsRead, clearAllNotifications, markAllAsRead } from "@/lib/store/slices/notificationSlice";
+import { ChangePasswordModal } from "@/lib/components/ui/ChangePasswordModal";
 
 const { Header, Sider, Content } = Layout;
 
@@ -47,6 +48,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     const [collapsed, setCollapsed] = useState(false);
     const [mobileVisible, setMobileVisible] = useState(false);
     const [hasMounted, setHasMounted] = useState(false);
+    const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
     const [api, contextHolder] = notification.useNotification();
 
     React.useEffect(() => {
@@ -88,12 +90,19 @@ export function Shell({ children }: { children: React.ReactNode }) {
         }
     }, [socket, user, api, dispatch]);
 
+    React.useEffect(() => {
+        if (hasMounted && user?.must_change_password) {
+            setIsChangePasswordOpen(true);
+        }
+    }, [hasMounted, user]);
+
     const handleLogout = () => {
         if (typeof window !== 'undefined') {
+            console.log("Initiating Logout...");
             localStorage.removeItem('token');
             localStorage.removeItem('refresh_token');
-            refreshUser();
-            router.push("/");
+            // Hard refresh to clear all states
+            window.location.href = '/';
         }
     };
 
@@ -103,6 +112,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
             label: 'Profile & Settings',
             icon: <SettingOutlined />,
             onClick: () => router.push('/settings')
+        },
+        {
+            key: 'security',
+            label: 'Security & Password',
+            icon: <SafetyCertificateOutlined />,
+            onClick: () => setIsChangePasswordOpen(true)
         },
         {
             type: 'divider',
@@ -376,6 +391,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
                     </AnimatePresence>
                 </Content>
             </Layout>
+            <ChangePasswordModal 
+                open={isChangePasswordOpen} 
+                onCancel={() => setIsChangePasswordOpen(false)} 
+            />
         </Layout>
     );
 }
