@@ -21,6 +21,7 @@ interface User {
     profile_photo: string | null;
     created_at: string;
     is_platform_admin: boolean;
+    must_change_password: boolean;
     school_id: number | null;
 }
 

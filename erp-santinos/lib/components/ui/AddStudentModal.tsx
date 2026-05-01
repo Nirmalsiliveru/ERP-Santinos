@@ -1,35 +1,84 @@
 'use client';
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Form, Input, DatePicker, Select, message, Tabs, Checkbox, Row, Col, Divider, Upload } from "antd";
 import Image from "next/image";
 import { Button } from "@/lib/components/ui";
 import { UploadOutlined, UserOutlined } from "@ant-design/icons";
 import api from "@/lib/api";
+import dayjs from "dayjs";
 
 const { TabPane } = Tabs;
 
 interface StudentFormProps {
     open: boolean;
+    student?: any;
     onCancel: () => void;
     onSuccess: () => void;
 }
 
-export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps) {
+export function AddStudentModal({ open, student, onCancel, onSuccess }: StudentFormProps) {
     const [form] = Form.useForm();
-    const [loading, setLoading] = React.useState(false);
-    const [loadingAcademics, setLoadingAcademics] = React.useState(false);
-    const [classes, setClasses] = React.useState<any[]>([]);
-    const [sections, setSections] = React.useState<any[]>([]);
-    const [filteredSections, setFilteredSections] = React.useState<any[]>([]);
-    const [fileList, setFileList] = React.useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [loadingAcademics, setLoadingAcademics] = useState(false);
+    const [classes, setClasses] = useState<any[]>([]);
+    const [sections, setSections] = useState<any[]>([]);
+    const [filteredSections, setFilteredSections] = useState<any[]>([]);
+    const [fileList, setFileList] = useState<any[]>([]);
+    const [activeTab, setActiveTab] = useState("1");
     const [messageApi, contextHolder] = message.useMessage();
 
-    React.useEffect(() => {
+    const [submittable, setSubmittable] = useState(false);
+    const values = Form.useWatch([], form);
+
+    useEffect(() => {
+        // Explicitly define cross-tab mandatory fields
+        const mandatoryFields = ["first_name", "class_id", "section_id", "parent_email", "parent_phone", "email"];
+        
+        // Check if all are present
+        const isBasicallyFilled = mandatoryFields.every(key => {
+            const val = values?.[key];
+            return val !== undefined && val !== null && val !== "";
+        });
+
+        if (!isBasicallyFilled) {
+            setSubmittable(false);
+            return;
+        }
+
+        // Then do a full validation check for format (e.g. email validity)
+        form.validateFields({ validateOnly: true }).then(
+            () => setSubmittable(true),
+            () => setSubmittable(false)
+        );
+    }, [values, form]);
+
+    // Comprehensive mapping of all fields to their respective tabs
+    const tabFields: { [key: string]: string[] } = {
+        "1": ["first_name", "last_name", "date_of_birth", "gender", "blood_group", "religion", "nationality", "category", "mother_tongue", "aadhaar_number"],
+        "2": ["admission_number", "admission_date", "class_id", "section_id", "roll_number", "academic_year_id", "father_name", "father_occupation", "mother_name", "mother_occupation", "parent_email", "parent_phone"],
+        "3": ["email", "address", "medical_conditions", "allergies", "transport_required", "hostel_required"]
+    };
+
+    useEffect(() => {
         if (open) {
             fetchAcademics();
+            if (student && typeof student === 'object') {
+                setActiveTab("1");
+                form.setFieldsValue({
+                    ...student,
+                    date_of_birth: student.date_of_birth ? dayjs(student.date_of_birth) : undefined,
+                    admission_date: student.admission_date ? dayjs(student.admission_date) : undefined,
+                });
+                if (student.class_id) {
+                    handleClassChange(student.class_id);
+                }
+            } else {
+                form.resetFields();
+                setActiveTab("1");
+            }
         }
-    }, [open]);
+    }, [open, student]);
 
     const fetchAcademics = async () => {
         setLoadingAcademics(true);
@@ -40,6 +89,12 @@ export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps)
             ]);
             setClasses(classRes.data.items || []);
             setSections(sectionRes.data);
+            
+            // If editing, make sure sections are filtered correctly
+            if (student?.class_id) {
+                const filtered = (sectionRes.data || []).filter((s: any) => s.class_id === student.class_id);
+                setFilteredSections(filtered);
+            }
         } catch (error: any) {
             console.error("Fetch Academics Error:", error);
         } finally {
@@ -50,7 +105,10 @@ export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps)
     const handleClassChange = (classId: number) => {
         const filtered = sections.filter(s => s.class_id === classId);
         setFilteredSections(filtered);
-        form.setFieldValue('section_id', undefined);
+        // Don't reset if it's the initial load for editing
+        if (form.getFieldValue('class_id') !== classId) {
+            form.setFieldValue('section_id', undefined);
+        }
     };
 
     const onFinish = async (values: any) => {
@@ -62,8 +120,18 @@ export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps)
                 admission_date: values.admission_date?.format('YYYY-MM-DD'),
             };
 
-            const studentRes = await api.post('/student', payload);
-            const studentId = studentRes.data.data.id;
+            let studentId;
+            if (student && student.id) {
+                // Update existing student
+                await api.put(`/student/${student.id}`, payload);
+                studentId = student.id;
+                messageApi.success("Registry updated successfully.");
+            } else {
+                // Create new student
+                const studentRes = await api.post('/student', payload);
+                studentId = studentRes.data.data.id;
+                messageApi.success("Comprehensive student record initialized.");
+            }
 
             // Handle Photo Upload if exists
             if (fileList.length > 0) {
@@ -74,16 +142,30 @@ export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps)
                 });
             }
 
-            messageApi.success("Comprehensive student record & biometric data initialized.");
             form.resetFields();
             setFileList([]);
             onSuccess();
         } catch (error: any) {
-            console.error("Add Student Error:", error);
+            console.error("Save Student Error:", error);
             messageApi.error(error.response?.data?.detail || "Registry write failed.");
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleFinishFailed = (errorInfo: any) => {
+        console.log("Validation Failed:", errorInfo);
+        if (errorInfo.errorFields && errorInfo.errorFields.length > 0) {
+            const firstErrorField = errorInfo.errorFields[0].name[0];
+            // Find which tab this field belongs to
+            for (const [tabKey, fields] of Object.entries(tabFields)) {
+                if (fields.includes(firstErrorField)) {
+                    setActiveTab(tabKey);
+                    break;
+                }
+            }
+        }
+        messageApi.error("Please correct the highlighted errors in the registry.");
     };
 
     return (
@@ -94,8 +176,12 @@ export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps)
             title={
                 <div className="mb-2">
                     {contextHolder}
-                    <h2 className="text-xl font-black text-zinc-900 tracking-tight">Comprehensive Student Enrollment</h2>
-                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">High-Fidelity Unified Profile</p>
+                    <h2 className="text-xl font-black text-zinc-900 tracking-tight">
+                        {student ? "Registry Modification" : "Comprehensive Student Enrollment"}
+                    </h2>
+                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">
+                        {student?.first_name ? `Editing Profile: ${student.first_name}` : "High-Fidelity Unified Profile"}
+                    </p>
                 </div>
             }
             width={720}
@@ -114,10 +200,11 @@ export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps)
                 form={form}
                 layout="vertical"
                 onFinish={onFinish}
+                onFinishFailed={handleFinishFailed}
                 autoComplete="off"
                 initialValues={{ gender: 'Male', transport_required: false, hostel_required: false, nationality: 'Indian' }}
             >
-                <Tabs defaultActiveKey="1" className="custom-tabs">
+                <Tabs activeKey={activeTab} onChange={setActiveTab} className="custom-tabs">
                     <TabPane tab={<span className="text-[10px] font-bold uppercase tracking-widest px-2">1. Personal Identity</span>} key="1">
                         <div className="pt-8 flex flex-col md:flex-row gap-10">
                             <div className="flex flex-col items-center gap-4">
@@ -225,19 +312,22 @@ export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps)
                                     <Input className="h-11 rounded-xl" />
                                 </Form.Item>
                             </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <Form.Item name="parent_email" label={<span className="label-text">Parent Portal Email</span>} rules={[{ type: 'email' }, { required: true, message: 'Required for Parent Portal access' }]}>
+                                    <Input className="h-11 rounded-xl" placeholder="email@parent.com" />
+                                </Form.Item>
+                                <Form.Item name="parent_phone" label={<span className="label-text">Parent Contact</span>} rules={[{ required: true }]}>
+                                    <Input className="h-11 rounded-xl" placeholder="+91 XXXX XXX XXX" />
+                                </Form.Item>
+                            </div>
                         </div>
                     </TabPane>
 
                     <TabPane tab={<span className="text-[10px] font-bold uppercase tracking-widest px-2">3. Medical & Contact</span>} key="3">
                         <div className="pt-4 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <Form.Item name="email" label={<span className="label-text">Primary Email</span>} rules={[{ required: true, type: 'email' }]}>
-                                    <Input className="h-11 rounded-xl" />
-                                </Form.Item>
-                                <Form.Item name="parent_phone" label={<span className="label-text">Parent Contact</span>} rules={[{ required: true }]}>
-                                    <Input className="h-11 rounded-xl" />
-                                </Form.Item>
-                            </div>
+                            <Form.Item name="email" label={<span className="label-text">Student Email</span>} rules={[{ required: true, type: 'email' }]}>
+                                <Input className="h-11 rounded-xl" placeholder="student@example.com" />
+                            </Form.Item>
                             <Form.Item name="address" label={<span className="label-text">Permanent Address</span>}>
                                 <Input.TextArea rows={2} className="rounded-xl" />
                             </Form.Item>
@@ -267,8 +357,10 @@ export function AddStudentModal({ open, onCancel, onSuccess }: StudentFormProps)
                         variant="default"
                         htmlType="submit"
                         loading={loading}
+                        disabled={!submittable}
+                        className={!submittable ? "opacity-50 grayscale" : ""}
                     >
-                        Initialize Full Profile
+                        {student ? "Update Registry" : "Initialize Full Profile"}
                     </Button>
                 </div>
             </Form>

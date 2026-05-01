@@ -8,16 +8,18 @@ import {
     FilterOutlined,
     MoreOutlined,
     UserAddOutlined,
-    LoadingOutlined
+    LoadingOutlined,
+    DeleteOutlined,
+    EditOutlined
 } from "@ant-design/icons";
 import api from "@/lib/api";
 import { message, Tag } from "antd";
 import { AddStudentModal } from "@/lib/components/ui/AddStudentModal";
-
 export default function StudentsPage() {
     const [loading, setLoading] = useState(true);
-    const [students, setStudents] = useState([]);
+    const [students, setStudents] = useState<any[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingStudent, setEditingStudent] = useState<any>(null);
     const [messageApi, contextHolder] = message.useMessage();
 
     useEffect(() => {
@@ -28,7 +30,13 @@ export default function StudentsPage() {
         setLoading(true);
         try {
             const response = await api.get('/students');
-            setStudents(response.data);
+            if (Array.isArray(response.data)) {
+                setStudents(response.data);
+            } else {
+                console.error("API returned non-array data:", response.data);
+                setStudents([]);
+                messageApi.error("Received incompatible data from the registry.");
+            }
         } catch (error: any) {
             console.error("Fetch Students Error:", error);
             messageApi.error("Unable to synchronize with the Student Registry.");
@@ -37,8 +45,26 @@ export default function StudentsPage() {
         }
     };
 
+    const handleDelete = async (id: number) => {
+        if (!window.confirm("Are you sure you want to purge this student profile from the registry?")) return;
+        
+        try {
+            await api.delete(`/student/${id}`);
+            messageApi.success("Student profile purged from the registry.");
+            fetchStudents();
+        } catch (error: any) {
+            messageApi.error("Failed to delete record.");
+        }
+    };
+
+    const handleEdit = (student: any) => {
+        setEditingStudent(student);
+        setIsModalOpen(true);
+    };
+
     const handleEnrollSuccess = () => {
         setIsModalOpen(false);
+        setEditingStudent(null);
         fetchStudents();
     };
 
@@ -49,11 +75,11 @@ export default function StudentsPage() {
             render: (r: any) => (
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center text-white font-bold text-xs uppercase">
-                        {r.first_name[0]}
+                        {r?.first_name ? r.first_name[0] : '?'}
                     </div>
                     <div className="flex flex-col">
-                        <span className="font-bold text-zinc-900 text-sm">{r.first_name} {r.last_name || ''}</span>
-                        <span className="text-[10px] text-zinc-400 font-medium">{r.email}</span>
+                        <span className="font-bold text-zinc-900 text-sm">{r?.first_name || 'Unknown'} {r?.last_name || ''}</span>
+                        <span className="text-[10px] text-zinc-400 font-medium">{r?.email || 'No Email'}</span>
                     </div>
                 </div>
             )
@@ -69,7 +95,7 @@ export default function StudentsPage() {
             key: 'class_id',
             render: (_: any, record: any) => (
                 <Tag color="blue" className="rounded-full px-3 border-none font-bold text-[10px]">
-                    {record.class_obj?.name || `Grade ${record.class_id || '?'}`}
+                    {record?.class_obj?.name || `Grade ${record?.class_id || '?'}`}
                 </Tag>
             )
         },
@@ -89,7 +115,20 @@ export default function StudentsPage() {
             key: 'created_at',
             render: (t: string) => <span className="text-zinc-400 text-[10px] font-bold">{new Date(t).toLocaleDateString()}</span>
         },
-        { title: '', key: 'action', render: () => <Button variant="ghost" icon={<MoreOutlined />} className="text-zinc-400 hover:text-zinc-900" /> }
+        { 
+            title: '', 
+            key: 'action', 
+            render: (_: any, r: any) => (
+                <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handleEdit(r)}>
+                        <EditOutlined className="text-zinc-400" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => handleDelete(r.id)}>
+                        <DeleteOutlined className="text-red-400" />
+                    </Button>
+                </div>
+            )
+        }
     ];
 
     return (
@@ -101,7 +140,7 @@ export default function StudentsPage() {
                         <h1 className="text-3xl font-black text-zinc-900 tracking-tight">Student Directory</h1>
                         <p className="text-zinc-500 text-sm font-medium mt-1">Live synchronization with the core student database.</p>
                     </div>
-                    <Button className="btn-primary flex items-center gap-2" onClick={() => setIsModalOpen(true)}>
+                    <Button className="btn-primary flex items-center gap-2" onClick={() => { setEditingStudent(null); setIsModalOpen(true); }}>
                         <UserAddOutlined />
                         Enroll New Student
                     </Button>
@@ -151,7 +190,8 @@ export default function StudentsPage() {
 
             <AddStudentModal
                 open={isModalOpen}
-                onCancel={() => setIsModalOpen(false)}
+                student={editingStudent}
+                onCancel={() => { setIsModalOpen(false); setEditingStudent(null); }}
                 onSuccess={handleEnrollSuccess}
             />
         </Shell>
