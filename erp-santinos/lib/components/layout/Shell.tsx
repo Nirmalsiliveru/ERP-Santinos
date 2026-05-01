@@ -128,6 +128,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         { key: "/reports", icon: <BarChartOutlined />, label: <Link href="/reports" className="text-[13px]">Reports</Link> },
         { key: "/users", icon: <SafetyCertificateOutlined />, label: <Link href="/users" className="text-[13px]">User Management</Link> },
         { key: "/rbac", icon: <FileProtectOutlined />, label: <Link href="/rbac" className="text-[13px]">Roles & Permissions</Link> },
+        { key: "/settings/audit-logs", icon: <BarChartOutlined />, label: <Link href="/settings/audit-logs" className="text-[13px]">System Audit Logs</Link> },
         { type: 'divider' },
         { key: "/settings/academic-years", icon: <CalendarOutlined />, label: <Link href="/settings/academic-years" className="text-[13px] font-bold">Academic Sessions</Link> },
         { key: "/settings", icon: <SettingOutlined />, label: <Link href="/settings" className="text-[13px]">Settings</Link> },

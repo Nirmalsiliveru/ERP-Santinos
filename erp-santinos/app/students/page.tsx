@@ -8,16 +8,20 @@ import {
     FilterOutlined,
     MoreOutlined,
     UserAddOutlined,
-    LoadingOutlined
+    LoadingOutlined,
+    HistoryOutlined
 } from "@ant-design/icons";
 import api from "@/lib/api";
 import { message, Tag } from "antd";
 import { AddStudentModal } from "@/lib/components/ui/AddStudentModal";
+import { PromotionModal } from "@/lib/components/ui/PromotionModal";
 
 export default function StudentsPage() {
     const [loading, setLoading] = useState(true);
     const [students, setStudents] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isPromotionOpen, setIsPromotionOpen] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<any[]>([]);
     const [messageApi, contextHolder] = message.useMessage();
 
     useEffect(() => {
@@ -39,7 +43,32 @@ export default function StudentsPage() {
 
     const handleEnrollSuccess = () => {
         setIsModalOpen(false);
+        setIsPromotionOpen(false);
+        setSelectedIds([]);
         fetchStudents();
+    };
+
+    const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        setLoading(true);
+        try {
+            const response = await api.post('/students/import', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            messageApi.success(`Successfully imported ${response.data.imported} students.`);
+            fetchStudents();
+        } catch (error: any) {
+            console.error("Import Error:", error);
+            messageApi.error("Bulk Import failed. Check your CSV format.");
+        } finally {
+            setLoading(false);
+            if (e.target) e.target.value = ''; // Reset input
+        }
     };
 
     const columns = [
@@ -101,10 +130,35 @@ export default function StudentsPage() {
                         <h1 className="text-3xl font-black text-zinc-900 tracking-tight">Student Directory</h1>
                         <p className="text-zinc-500 text-sm font-medium mt-1">Live synchronization with the core student database.</p>
                     </div>
-                    <Button className="btn-primary flex items-center gap-2" onClick={() => setIsModalOpen(true)}>
-                        <UserAddOutlined />
-                        Enroll New Student
-                    </Button>
+                    <div className="flex gap-3">
+                        <input
+                            type="file"
+                            id="csv-import"
+                            accept=".csv"
+                            className="hidden"
+                            onChange={handleImportCSV}
+                        />
+                        <Button 
+                            variant="outline" 
+                            className="btn-secondary flex items-center gap-2"
+                            onClick={() => document.getElementById('csv-import')?.click()}
+                        >
+                            Import CSV
+                        </Button>
+                        <Button className="btn-primary flex items-center gap-2" onClick={() => setIsModalOpen(true)}>
+                            <UserAddOutlined />
+                            Enroll New Student
+                        </Button>
+                        {selectedIds.length > 0 && (
+                            <Button 
+                                className="bg-zinc-900 text-white border-none h-11 px-6 rounded-xl flex items-center gap-2 font-black text-[10px] uppercase tracking-widest animate-in fade-in zoom-in slide-in-from-right-4 duration-300"
+                                onClick={() => setIsPromotionOpen(true)}
+                            >
+                                <HistoryOutlined className="text-emerald-400" />
+                                Promote {selectedIds.length} Selected
+                            </Button>
+                        )}
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -127,6 +181,11 @@ export default function StudentsPage() {
                     ) : (
                         <>
                             <Table
+                                rowSelection={{
+                                    type: 'checkbox',
+                                    selectedRowKeys: selectedIds,
+                                    onChange: (keys: any) => setSelectedIds(keys)
+                                }}
                                 dataSource={students}
                                 columns={columns}
                                 pagination={false}
@@ -152,6 +211,13 @@ export default function StudentsPage() {
             <AddStudentModal
                 open={isModalOpen}
                 onCancel={() => setIsModalOpen(false)}
+                onSuccess={handleEnrollSuccess}
+            />
+
+            <PromotionModal
+                open={isPromotionOpen}
+                selectedStudentIds={selectedIds}
+                onCancel={() => setIsPromotionOpen(false)}
                 onSuccess={handleEnrollSuccess}
             />
         </Shell>

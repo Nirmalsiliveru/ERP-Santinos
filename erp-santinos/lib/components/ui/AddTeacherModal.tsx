@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from "react";
-import { Modal, Form, Input, DatePicker, message, Tabs, Select, Upload, Divider } from "antd";
+import { Modal, Form, Input, DatePicker, message, Tabs, Select, Upload, Divider, InputNumber } from "antd";
 import { Button } from "@/lib/components/ui";
 import { UserOutlined } from "@ant-design/icons";
 import api from "@/lib/api";
@@ -217,6 +217,11 @@ export function AddTeacherModal({ open, onCancel, onSuccess, initialData }: Teac
                                 </Form.Item>
                                 <Form.Item name="employment_type" label={<span className="label-text">Employment Type</span>}>
                                     <Select className="custom-select w-full" options={['Permanent', 'Contract', 'Part-time', 'Probation'].map(v => ({ value: v, label: v }))} />
+                                </Form.Item>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <Form.Item name="max_periods_per_week" label={<span className="label-text">Max Workload (Periods/Week)</span>}>
+                                    <InputNumber min={1} max={100} className="w-full h-11 rounded-xl flex items-center bg-zinc-50/50" />
                                 </Form.Item>
                             </div>
                             <Divider className="my-2" />
