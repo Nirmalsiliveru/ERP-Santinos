@@ -9,9 +9,11 @@ import {
     LockOutlined,
     EditOutlined,
     LoadingOutlined,
-    SafetyOutlined
+    SafetyOutlined,
+    DeleteOutlined
 } from "@ant-design/icons";
 import api from "@/lib/api";
+import { Popconfirm } from "antd";
 
 export default function RBACPage() {
     const [loading, setLoading] = useState(true);
@@ -36,6 +38,16 @@ export default function RBACPage() {
     useEffect(() => {
         fetchRoles();
     }, [fetchRoles]);
+
+    const handleDelete = async (id: number) => {
+        try {
+            await api.delete(`/roles/${id}`);
+            messageApi.success("Role purged from system registry.");
+            fetchRoles();
+        } catch (error: any) {
+            messageApi.error(error.response?.data?.detail || "Protocol termination failed.");
+        }
+    };
 
     const columns = [
         {
@@ -69,13 +81,32 @@ export default function RBACPage() {
             title: 'ACTION',
             key: 'action',
             render: (r: any) => (
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => { setSelectedRole(r); setIsModalOpen(true); }}
-                >
-                    <EditOutlined className="text-zinc-400 hover:text-primary" />
-                </Button>
+                <div className="flex items-center gap-1">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => { setSelectedRole(r); setIsModalOpen(true); }}
+                    >
+                        <EditOutlined className="text-zinc-400 hover:text-primary" />
+                    </Button>
+                    <Popconfirm
+                        title="Purge Role?"
+                        description="Are you sure you want to delete this security role? This action is irreversible."
+                        onConfirm={() => handleDelete(r.id)}
+                        okText="Purge"
+                        cancelText="Abort"
+                        okButtonProps={{ danger: true, className: 'bg-rose-500 hover:bg-rose-600' }}
+                        disabled={['admin', 'teacher', 'student', 'parent', 'hod'].includes(r.name)}
+                    >
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            disabled={['admin', 'teacher', 'student', 'parent', 'hod'].includes(r.name)}
+                        >
+                            <DeleteOutlined className={['admin', 'teacher', 'student', 'parent', 'hod'].includes(r.name) ? "text-zinc-100" : "text-zinc-400 hover:text-rose-500"} />
+                        </Button>
+                    </Popconfirm>
+                </div>
             )
         }
     ];

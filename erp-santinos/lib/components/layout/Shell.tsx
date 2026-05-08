@@ -130,41 +130,114 @@ export function Shell({ children }: { children: React.ReactNode }) {
             onClick: handleLogout
         },
     ];
-
-    const baseMenuItems: MenuProps['items'] = [
-        { key: "/dashboard", icon: <DashboardOutlined />, label: <Link href="/dashboard" className="text-[13px]">Dashboard</Link> },
-        { key: "/students", icon: <UserOutlined />, label: <Link href="/students" className="text-[13px]">Students</Link> },
-        { key: "/teachers", icon: <TeamOutlined />, label: <Link href="/teachers" className="text-[13px]">Teachers</Link> },
-        { key: "/academics", icon: <BookOutlined />, label: <Link href="/academics" className="text-[13px]">Academics</Link> },
-        { key: "/attendance", icon: <CheckCircleOutlined />, label: <Link href="/attendance" className="text-[13px]">Attendance</Link> },
-        { key: "/holidays", icon: <CalendarOutlined />, label: <Link href="/holidays" className="text-[13px]">Holidays</Link> },
-        { key: "/exams", icon: <FileProtectOutlined />, label: <Link href="/exams" className="text-[13px]">Exams</Link> },
-        { key: "/fees", icon: <DollarOutlined />, label: <Link href="/fees" className="text-[13px]">Fees</Link> },
-        { key: "/reports", icon: <BarChartOutlined />, label: <Link href="/reports" className="text-[13px]">Reports</Link> },
-        { key: "/users", icon: <SafetyCertificateOutlined />, label: <Link href="/users" className="text-[13px]">User Management</Link> },
-        { key: "/rbac", icon: <FileProtectOutlined />, label: <Link href="/rbac" className="text-[13px]">Roles & Permissions</Link> },
-        { key: "/settings/audit-logs", icon: <BarChartOutlined />, label: <Link href="/settings/audit-logs" className="text-[13px]">System Audit Logs</Link> },
+    const baseMenuItems = [
+        {
+            key: "/dashboard", 
+            icon: <DashboardOutlined />, 
+            label: <Link href="/dashboard" className="text-[13px]">Dashboard</Link>,
+            permission: "read_dashboard"
+        },
+        { 
+            key: "/students", 
+            icon: <UserOutlined />, 
+            label: <Link href="/students" className="text-[13px]">Students</Link>,
+            permission: "manage_students"
+        },
+        { 
+            key: "/teachers", 
+            icon: <TeamOutlined />, 
+            label: <Link href="/teachers" className="text-[13px]">Teachers</Link>,
+            permission: "manage_teachers"
+        },
+        { 
+            key: "/academics", 
+            icon: <BookOutlined />, 
+            label: <Link href="/academics" className="text-[13px]">Academics</Link>,
+            permission: "manage_classes" 
+        },
+        { 
+            key: "/attendance", 
+            icon: <CheckCircleOutlined />, 
+            label: <Link href="/attendance" className="text-[13px]">Attendance</Link>,
+            permission: "read_attendance"
+        },
+        {
+            key: "/holidays", 
+            icon: <CalendarOutlined />, 
+            label: <Link href="/holidays" className="text-[13px]">Holidays</Link>,
+            permission: "manage_holidays"
+        },
+        { 
+            key: "/exams", 
+            icon: <FileProtectOutlined />, 
+            label: <Link href="/exams" className="text-[13px]">Exams</Link>,
+            permission: "view_reports"
+        },
+        { 
+            key: "/fees", 
+            icon: <DollarOutlined />, 
+            label: <Link href="/fees" className="text-[13px]">Fees</Link>,
+            permission: "manage_fees"
+        },
+        { 
+            key: "/reports", 
+            icon: <BarChartOutlined />, 
+            label: <Link href="/reports" className="text-[13px]">Reports</Link>,
+            permission: "view_reports"
+        },
+        { 
+            key: "/users", 
+            icon: <SafetyCertificateOutlined />, 
+            label: <Link href="/users" className="text-[13px]">User Management</Link>,
+            permission: "manage_users"
+        },
+        { 
+            key: "/rbac", 
+            icon: <FileProtectOutlined />, 
+            label: <Link href="/rbac" className="text-[13px]">Roles & Permissions</Link>,
+            permission: "manage_roles"
+        },
+        { 
+            key: "/settings/audit-logs", 
+            icon: <BarChartOutlined />, 
+            label: <Link href="/settings/audit-logs" className="text-[13px]">System Audit Logs</Link>,
+            permission: "manage_users" // Audits are usually admin-level
+        },
         { type: 'divider' },
-        { key: "/settings/academic-years", icon: <CalendarOutlined />, label: <Link href="/settings/academic-years" className="text-[13px] font-bold">Academic Sessions</Link> },
-        { key: "/settings", icon: <SettingOutlined />, label: <Link href="/settings" className="text-[13px]">Settings</Link> },
+        { 
+            key: "/settings/academic-years", 
+            icon: <CalendarOutlined />, 
+            label: <Link href="/settings/academic-years" className="text-[13px] font-bold">Academic Sessions</Link>,
+            permission: "manage_classes"
+        },
+        { 
+            key: "/settings", 
+            icon: <SettingOutlined />, 
+            label: <Link href="/settings" className="text-[13px]">Settings</Link>,
+            permission: "manage_settings"
+        },
     ];
+
+    // Filter items based on backend permissions
+    const filteredMenuItems = baseMenuItems.filter(item => {
+        if (item.type === 'divider') return true;
+        if (!item.permission) return false; // Every item now requires a permission
+        
+        // Platform admins with '*' get everything
+        if (user?.permissions?.includes('*')) return true;
+        
+        return user?.permissions?.includes(item.permission);
+    });
 
     let menuItems: MenuProps['items'] = [];
     if (user?.is_platform_admin) {
         menuItems = [
             { key: "/platform", icon: <GlobalOutlined />, label: <Link href="/platform" className="text-[13px] font-bold text-primary">School Management</Link> } as any,
             { type: 'divider' } as any,
-            ...baseMenuItems
-        ];
-    } else if (user?.role === 'parent') {
-        menuItems = [
-            { key: "/parent-dashboard", icon: <DashboardOutlined />, label: <Link href="/parent-dashboard" className="text-[13px]">My Dashboard</Link> },
-            { key: "/attendance", icon: <CheckCircleOutlined />, label: <Link href="/attendance" className="text-[13px]">Attendance</Link> },
-            { key: "/fees", icon: <DollarOutlined />, label: <Link href="/fees" className="text-[13px]">Fees</Link> },
-            { key: "/reports", icon: <BarChartOutlined />, label: <Link href="/reports" className="text-[13px]">Report Cards</Link> },
+            ...filteredMenuItems as any
         ];
     } else {
-        menuItems = baseMenuItems;
+        menuItems = filteredMenuItems as any;
     }
 
     if (!hasMounted) return <div className="min-h-screen bg-white" />;
@@ -178,10 +251,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 {(!collapsed || mobileVisible) && (
                     <div className="flex flex-col">
                         <span className="text-sm font-black text-primary uppercase tracking-tight leading-none font-sans">
-                            {user?.is_platform_admin ? 'Platform Admin' : 'BodhiEdu'}
+                            {user?.is_platform_admin ? 'Platform Admin' : user?.role === 'teacher' ? 'Faculty Member' : 'BodhiEdu'}
                         </span>
                         <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mt-1 font-sans">
-                            {user?.is_platform_admin ? 'Multi-tenant Control' : 'SaaS ERP'}
+                            {user?.is_platform_admin ? 'Multi-tenant Control' : user?.role === 'teacher' ? 'Teacher Nexus' : 'SaaS ERP'}
                         </span>
                     </div>
                 )}
@@ -256,7 +329,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                         </button>
 
                         <div className="hidden lg:flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-sans">
-                            <span>{user?.is_platform_admin ? 'PLATFORM OWNER' : 'ADMIN'}</span>
+                            <span>{user?.is_platform_admin ? 'PLATFORM OWNER' : user?.role?.toUpperCase() || 'ADMIN'}</span>
                             <span className="text-zinc-200">/</span>
                             <span className="text-zinc-900">{pathname?.split('/')[1]?.toUpperCase() || 'OVERVIEW'}</span>
                         </div>
