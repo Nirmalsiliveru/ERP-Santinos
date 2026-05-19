@@ -1,14 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Shell } from "@/lib/components/layout";
-import { Table, message, Tag, Card, Statistic, Row, Col, Progress, Rate } from "antd";
+import { Table, message, Card, Statistic, Row, Col, Progress, Rate } from "antd";
 import { 
-    TeamOutlined, 
     FireOutlined, 
     ThunderboltOutlined, 
-    BarChartOutlined,
-    UserOutlined
+    BarChartOutlined
 } from "@ant-design/icons";
 import api from "@/lib/api";
 
@@ -98,7 +96,8 @@ export default function TeacherPerformancePage() {
                     <Col span={8}>
                         <Card className="glass-card">
                             <Statistic title={<span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Total Periods Logged</span>} value={482} valueStyle={{ fontWeight: 900, color: '#10b981', fontStyle: 'italic' }} prefix={<FireOutlined />} />
-                        </Col>
+                        </Card>
+                    </Col>
                     <Col span={8}>
                         <Card className="glass-card">
                             <Statistic title={<span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Curriculum Coverage</span>} value={78.5} suffix="%" valueStyle={{ fontWeight: 900, color: '#8b5cf6', fontStyle: 'italic' }} prefix={<BarChartOutlined />} />
